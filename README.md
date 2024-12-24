@@ -95,7 +95,7 @@ lanqiao_mcu/
 
 ## 许可证
 
-本仓库基于 [MIT 许可证](LICENSE) 发布。
+本仓库基于 [GPLv3许可证](LICENSE) 发布。
 
 ---
 
