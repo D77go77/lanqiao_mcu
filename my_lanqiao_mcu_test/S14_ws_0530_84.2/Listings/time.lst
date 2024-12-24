@@ -1,0 +1,121 @@
+C51 COMPILER V9.60.7.0   TIME                                                              05/30/2024 19:42:21 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN .\Objects\time.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE time.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -time.lst) OBJECT(.\Objects\time.obj)
+
+line level    source
+
+   1          #include "time.h"
+   2          u8 th=0;
+   3          u8 tl=0;
+   4          bit f_1s=0;
+   5          bit f_20ms_key = 0;
+   6          bit f_100ms_adc = 0;
+   7          bit f_100ms_state = 0;
+   8          bit f_100ms_led=0;
+   9          bit f_100ms_rtc = 0;
+  10          bit f_200ms_uart = 0;
+  11          bit f_800ms_t = 0;
+  12          bit f_3s=0;
+  13          bit f_led=0;
+  14          
+  15          void tim_proc(void);
+  16          //******************************************
+  17          void pit1(void) interrupt 3
+  18          {
+  19   1              static u16 cnt1s = 0; 
+  20   1              if(++cnt1s >= 500)
+  21   1              {
+  22   2                      TR0 = 0;
+  23   2                      th=TH0;tl=TL0;
+  24   2                      TH0 = 0;TL0 = 0;        
+  25   2                      TR0 = 1;
+  26   2                      cnt1s = 0;f_1s=1;               
+  27   2              }               
+  28   1              disp_scan();    
+  29   1              tim_proc();     
+  30   1      }
+  31          
+  32          void Timer1_Init(void)          //2毫秒@12.000MHz
+  33          {
+  34   1              AUXR |= 0x40;                   //定时器时钟1T模式
+  35   1              TMOD &= 0x0F;                   //设置定时器模式
+  36   1              TL1 = 0x40;                             //设置定时初始值
+  37   1              TH1 = 0xA2;                             //设置定时初始值
+  38   1              TF1 = 0;                                //清除TF1标志
+  39   1              TR1 = 1;                                //定时器1开始计时
+  40   1              ET1 = 1;                                //使能定时器1中断
+  41   1      }
+  42          
+  43          void Timer0_Init(void)          //计数器
+  44          {
+  45   1              TMOD &=0xF0;                    //清除低位
+  46   1              TMOD |= 0x04;                   //设置计数器模式
+  47   1              TL0 = 0;                                //设置定时初始值
+  48   1              TH0 = 0;                                //设置定时初始值
+  49   1              TR0 = 1;                                //定时器0开始计时
+  50   1      }
+  51          
+  52          
+  53          void tim_proc(void)     
+  54          {
+C51 COMPILER V9.60.7.0   TIME                                                              05/30/2024 19:42:21 PAGE 2   
+
+  55   1              static u8 cnt_20ms = 0;
+  56   1              static u8 cnt_100ms = 0;
+  57   1              static u8 cnt_200ms = 0;        
+  58   1              static u16 cnt_800ms = 0;
+  59   1              static u16 cnt_3s=0;
+  60   1              static u16 cnt_50=0;
+  61   1              
+  62   1              if (++cnt_20ms == 10)
+  63   1              {
+  64   2                      cnt_20ms = 0;
+  65   2                      f_20ms_key = 1;  f_100ms_rtc=1;
+  66   2              }
+  67   1              if (++cnt_100ms == 50)
+  68   1              {
+  69   2                      cnt_100ms = 0;
+  70   2                      f_100ms_adc = 1;                f_100ms_state = 1;              f_100ms_led=1;  f_led=~f_led;
+  71   2              }
+  72   1              if (++cnt_200ms == 100)
+  73   1              {
+  74   2                      cnt_200ms = 0;
+  75   2                      f_200ms_uart = 1;
+  76   2              }
+  77   1              
+  78   1              if (++cnt_800ms == 400)
+  79   1              {
+  80   2                      cnt_800ms = 0;
+  81   2                      f_800ms_t = 1;
+  82   2              }
+  83   1              
+  84   1              if(++cnt_3s>=1500)
+  85   1              {
+  86   2                      cnt_3s=0;
+  87   2                      f_3s=1;
+  88   2              }
+  89   1              
+  90   1              if(++cnt_50>=25)
+  91   1              {
+  92   2                      cnt_50=0;
+  93   2                      led_mainloop();
+  94   2              }
+  95   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    254    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     13    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =     10    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

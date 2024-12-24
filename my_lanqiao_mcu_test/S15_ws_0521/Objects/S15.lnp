@@ -1,0 +1,10 @@
+".\Objects\main.obj",
+".\Objects\ctrl.obj",
+".\Objects\ds1302.obj",
+".\Objects\smg.obj",
+".\Objects\time.obj",
+".\Objects\iic.obj",
+".\Objects\key.obj" 
+TO ".\Objects\S15" 
+PRINT(".\Listings\S15.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

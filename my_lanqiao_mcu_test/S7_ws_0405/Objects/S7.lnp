@@ -1,0 +1,9 @@
+".\Objects\ctrl.obj",
+".\Objects\key.obj",
+".\Objects\main.obj",
+".\Objects\onewire.obj",
+".\Objects\smg.obj",
+".\Objects\time.obj" 
+TO ".\Objects\S7" 
+PRINT(".\Listings\S7.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

@@ -1,0 +1,98 @@
+C51 COMPILER V9.60.7.0   LED8                                                              03/26/2024 12:15:27 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED8
+OBJECT MODULE PLACED IN .\Objects\led8.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE led8.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -led8.lst) OBJECT(.\Objects\led8.obj)
+
+line level    source
+
+   1          #include "led8.h"
+   2          u8 dis_blink[8]={0,0,0,0,0,0,0,0};//闪烁
+   3          u8 dis_buf[8]={0,0,0,0,0,0,0,0};//
+   4          u8 dis_str[11];
+   5          //*********************************************
+   6          void disp_tran(void);
+   7          void disp_scan(void);
+   8          //**********************************************
+   9          void disp_scan(void)
+  10          {
+  11   1              static u8 i=0;
+  12   1              
+  13   1              P0=0;//关位选
+  14   1              P2 = P2 & 0x1f | 0xc0;
+  15   1              P2&=0x1f;//关门
+  16   1              
+  17   1              P0=dis_buf[i] | dis_blink[i];//送段码
+  18   1              P2 = P2 & 0x1f | 0xe0;
+  19   1              P2&=0x1f;//关门
+  20   1              
+  21   1              P0=1<<i;//开位选
+  22   1              P2 = P2 & 0x1f | 0xc0;
+  23   1              P2&=0x1f;//关门
+  24   1              
+  25   1              if(++i==8)i=0;//循环
+  26   1      }
+  27          //**********************************************
+  28          void disp_tran(void)    
+  29          {
+  30   1              u8 i = 0;
+  31   1              u8 j = 0;
+  32   1              u8 temp;
+  33   1              for (i = 0; i <= 7; i++, j++)
+  34   1              {
+  35   2                      switch (dis_str[j])
+  36   2                      {
+  37   3                      case '0':temp = 0xc0;break;
+  38   3                      case '1':temp = 0xf9;break;
+  39   3                      case '2':temp = 0xa4;break;
+  40   3                      case '3':temp = 0xb0;break;
+  41   3                      case '4':temp = 0x99;break;
+  42   3                      case '5':temp = 0x92;break;
+  43   3                      case '6':temp = 0x82;break;
+  44   3                      case '7':temp = 0xf8;break;
+  45   3                      case '8':temp = 0x80;break;
+  46   3                      case '9':temp = 0x90;break;
+  47   3                      case 'A':temp = 0x88;break;
+  48   3                      case 'B':temp = 0x83;break;
+  49   3                      case 'C':temp = 0xc6;break;
+  50   3                      case 'D':temp = 0xa1;break;
+  51   3                      case 'E':temp = 0x86;break;
+  52   3                      case 'F':temp = 0x8e;break;
+  53   3                      case ' ':temp = 0xff;break;
+  54   3                      case '-':temp = 0xbf;break;
+C51 COMPILER V9.60.7.0   LED8                                                              03/26/2024 12:15:27 PAGE 2   
+
+  55   3                      case 'H':temp = 0x89;break;
+  56   3                      case 'L':temp = 0xc7;break;
+  57   3                      case 'N':temp = 0xc8;break;
+  58   3                      case 'P':temp = 0x8c;break;
+  59   3                      case 'U':temp = 0xc1;break;
+  60   3                      case '*':temp = 0xc8;break;
+  61   3                      default:temp = 0xff;break;
+  62   3                      }
+  63   2                      //
+  64   2                      if (dis_str[j + 1] == '.')
+  65   2                      {
+  66   3                              temp &= 0x7f;//dp亮
+  67   3                              j++;//跳过下一位的小数点
+  68   3                      }
+  69   2                      //
+  70   2                      dis_buf[i] = temp;
+  71   2              }
+  72   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    326    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     28       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

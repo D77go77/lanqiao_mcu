@@ -1,0 +1,52 @@
+C51 COMPILER V9.60.7.0   WAVE                                                              05/30/2024 13:15:37 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE WAVE
+OBJECT MODULE PLACED IN .\Objects\wave.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE wave.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -wave.lst) OBJECT(.\Objects\wave.obj)
+
+line level    source
+
+   1          #include "wave.h"
+   2          void de(u8 a);
+   3          float read_d()
+   4          {
+   5   1              u16 d;
+   6   1              u8 num=16;
+   7   1              
+   8   1              TX=0;
+   9   1              while(num--)
+  10   1              {
+  11   2                      de(12);
+  12   2                      TX=!TX;
+  13   2              }
+  14   1              CH=CL=0;
+  15   1              CR=1;
+  16   1              while( RX&& CH<0x20 );//ÏÞ¶¨dÖµ·¶Î§0-5888£¬¼´²â¾à·¶Î§0-100cm
+  17   1      
+  18   1              CR=0;
+  19   1              
+  20   1              d=((u16)CH<<8|CL)+156;//156ÓÃÓÚÐ£×¼³¬Éù²¨²â¾à
+  21   1              return d;
+  22   1      }
+  23          
+  24          void de(u8 a)
+  25          {
+  26   1              while(a--);
+  27   1      }
+  28          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     67    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

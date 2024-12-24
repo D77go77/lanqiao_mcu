@@ -1,0 +1,11 @@
+".\Objects\main.obj",
+".\Objects\time.obj",
+".\Objects\smg.obj",
+".\Objects\key.obj",
+".\Objects\iic.obj",
+".\Objects\onewire.obj",
+".\Objects\wave.obj",
+".\Objects\ctrl.obj" 
+TO ".\Objects\J14" 
+PRINT(".\Listings\J14.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

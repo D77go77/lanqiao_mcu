@@ -1,0 +1,354 @@
+C51 COMPILER V9.59.0.0   MAIN                                                              06/05/2024 19:05:01 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          #include "all.h"
+   2          xdata struct _cj cj;
+   3          volatile u8 bdata led_dat = 0;
+   4          sbit L1 = led_dat ^ 0;
+   5          sbit L2 = led_dat ^ 1;
+   6          sbit L3 = led_dat ^ 2;
+   7          sbit L4 = led_dat ^ 3;
+   8          sbit L5 = led_dat ^ 4;
+   9          sbit L6 = led_dat ^ 5;
+  10          sbit L7 = led_dat ^ 6;
+  11          sbit L8 = led_dat ^ 7;
+  12          //
+  13          u8 run_state;
+  14          u8 _index=0;
+  15          //
+  16          void main_init();
+  17          void state_mainloop();
+  18          void key_mainloop();
+  19          void led_mainloop();
+  20          void tem_mainloop();
+  21          void wave_mainloop();
+  22          void adc_mainloop();
+  23          u8 calc_dac_out(u16 _dat);
+  24          //****************************
+  25          void main(void)
+  26          {
+  27   1              main_init();
+  28   1              EA=1;
+  29   1              while(1)
+  30   1              {
+  31   2                      state_mainloop();
+  32   2                      key_mainloop();
+  33   2                      tem_mainloop();
+  34   2                      wave_mainloop();
+  35   2                      adc_mainloop();
+  36   2                      led_mainloop();
+  37   2              }
+  38   1      }
+  39          //****************************
+  40          void main_init()
+  41          {
+  42   1              off(JDQ);off(FMQ);
+  43   1              led_dat  = 0;
+  44   1              run_state = 10;
+  45   1              
+  46   1              cj. t = 0; //温度23.5
+  47   1              cj. d = 0; //距离25
+  48   1              cj. d_set = 40;//距离参数
+  49   1              cj. t_set = 30;//温度参数
+  50   1              cj. d_cal = 0;//距离校准
+  51   1              cj. v_cal = 340;//速度校准
+  52   1              cj. dac_lim = 1;
+  53   1              cj. d_save = 0 ;//距离保存值
+  54   1              cj. dac =  0;//0~255
+C51 COMPILER V9.59.0.0   MAIN                                                              06/05/2024 19:05:01 PAGE 2   
+
+  55   1              cj.index=0;
+  56   1              cj.f_dac=0;
+  57   1              cj.d_[0]=cj.d_[1]=cj.d_[2]=cj.d_[3]=cj.d_[4]=cj.d_[5]=cj.d_[6]=cj.d_[7]=cj.d_[8]=cj.d_[9]=0;
+  58   1              
+  59   1              Timer1_Init();
+  60   1              CMOD=CH=CL=0;//PCA_init
+  61   1              init_temp();//temp
+  62   1              init_ad(0x43);//adc
+  63   1      }
+  64          //****************************
+  65          void state_mainloop()
+  66          {
+  67   1              static u8 cnt_6s = 0;
+  68   1              if(!f_100ms_state)return;
+  69   1              f_100ms_state = 0;
+  70   1              
+  71   1              switch(run_state)
+  72   1              {
+  73   2                      case 10:
+  74   2                              sprintf(dis_str,"%4.1f-%4d",cj.t,cj.d);
+  75   2                      break;
+  76   2                      case 11:
+  77   2                              sprintf(dis_str,"%4.1f- %4.2f",cj.t,cj.d/100.0);
+  78   2                      break;
+  79   2                      case 20:
+  80   2                              sprintf(dis_str,"P1    %02d",cj.d_set);
+  81   2                      break;
+  82   2                      case 21:
+  83   2                              sprintf(dis_str,"P2    %02d",cj.t_set);
+  84   2                      break;
+  85   2                      case 30:
+  86   2                              sprintf(dis_str,"F1   %3d",cj.d_cal);
+  87   2                      break;
+  88   2                      case 31:
+  89   2                              sprintf(dis_str,"F2  %4d",cj.v_cal);
+  90   2                      break;
+  91   2                      case 32:
+  92   2                              sprintf(dis_str,"F3    %2.1f",cj.dac_lim);
+  93   2                      break;
+  94   2                      case 40:
+  95   2                              sprintf(dis_str,"%03.1f-%4d",cj.t,cj.d);
+  96   2                              if(++cnt_6s == 60)
+  97   2                              {
+  98   3                                      run_state = 10;cnt_6s = 0;_index=0;
+  99   3                              }
+ 100   2                      break;          
+ 101   2                      case 41:
+ 102   2                              sprintf(dis_str,"%03.1f- %4.2f",cj.t,cj.d/100.0);
+ 103   2                              if(++cnt_6s == 60)
+ 104   2                              {
+ 105   3                                      run_state = 11;cnt_6s = 0;//_index=0;
+ 106   3                              }
+ 107   2                      break;  
+ 108   2              }
+ 109   1              disp_proc();
+ 110   1      }
+ 111          //****************************
+ 112          void key_mainloop()
+ 113          {
+ 114   1              if(!f_20ms_key)return;
+ 115   1              f_20ms_key = 0;
+ 116   1              
+C51 COMPILER V9.59.0.0   MAIN                                                              06/05/2024 19:05:01 PAGE 3   
+
+ 117   1              key_proc();
+ 118   1              
+ 119   1              if(!key_code)return;
+ 120   1              
+ 121   1              switch(key_code)
+ 122   1              {
+ 123   2                      case 4:
+ 124   2                              switch(run_state)
+ 125   2                              {
+ 126   3                                      case 10:
+ 127   3                                      case 11:run_state = 20;break;
+ 128   3                                      case 20:
+ 129   3                                      case 21:run_state = 30;break;
+ 130   3                                      case 30:
+ 131   3                                      case 31:
+ 132   3                                      case 32:run_state = 10;f_1000ms_wave=1;break;
+ 133   3                              }
+ 134   2                              break;
+ 135   2                              //
+ 136   2                      case 5:
+ 137   2                              switch(run_state)
+ 138   2                              {
+ 139   3                                      case 10:run_state = 11;break;
+ 140   3                                      case 11:run_state = 10;break;
+ 141   3                                      case 20:run_state = 21;break;
+ 142   3                                      case 21:run_state = 20;break;
+ 143   3                                      case 30:run_state = 31;break;
+ 144   3                                      case 31:run_state = 32;break;
+ 145   3                                      case 32:run_state = 31;break;
+ 146   3                              }
+ 147   2                              break;
+ 148   2                              //
+ 149   2                      case 8:
+ 150   2                              switch(run_state)
+ 151   2                              {
+ 152   3                                      case 10:cj.index=0;run_state = 40;break;
+ 153   3                                      case 11:cj.index=0;run_state = 41;break;//6s
+ 154   3                                      case 20:cj.d_set += 10;if(cj.d_set >90)cj.d_set = 90;break;
+ 155   3                                      case 21:cj.t_set += 1;if(cj.t_set >80)cj.t_set = 80;break;
+ 156   3                                      case 30:cj.d_cal += 5;if(cj.d_cal >90)cj.d_cal = 90;break;
+ 157   3                                      case 31:cj.v_cal += 10;if(cj.v_cal >9990)cj.v_cal = 9990;break;
+ 158   3                                      case 32:cj.dac_lim += 0.1;if(cj.dac_lim >2.0)cj.dac_lim = 2.0;break;
+ 159   3                              }
+ 160   2                              break;
+ 161   2                              //
+ 162   2                      case 9:
+ 163   2                              switch(run_state)
+ 164   2                              {
+ 165   3                                      case 10:
+ 166   3                                      case 11:
+ 167   3                                              cj.f_dac=1;
+ 168   3                                              f_1000ms_adc=1;
+ 169   3      //                                              cj.dac = calc_dac_out(cj.d_save);
+ 170   3      //                                              write_dac(cj.dac);//dac
+ 171   3                                                      break;
+ 172   3                                      case 20:cj.d_set -= 10;if(cj.d_set <10)cj.d_set = 10;break;
+ 173   3                                      case 21:cj.t_set -= 1;if(cj.t_set <0)cj.t_set = 0;break;
+ 174   3                                      case 30:cj.d_cal -= 5;if(cj.d_cal <-90)cj.d_cal = -90;break;
+ 175   3                                      case 31:cj.v_cal -= 10;if(cj.v_cal <10)cj.v_cal = 10;break;
+ 176   3                                      case 32:cj.dac_lim -= 0.1;if(cj.dac_lim <0.1)cj.dac_lim = 0.1;break;
+ 177   3                              }
+ 178   2                              break;
+C51 COMPILER V9.59.0.0   MAIN                                                              06/05/2024 19:05:01 PAGE 4   
+
+ 179   2                              //
+ 180   2                      case S89:
+ 181   2                              run_state = 10;
+ 182   2                              cj.t = 0;
+ 183   2                              cj.d = 0;
+ 184   2                              cj.d_set = 40;
+ 185   2                              cj.t_set = 30;
+ 186   2                              cj.d_cal = 0;
+ 187   2                              cj.v_cal = 340;
+ 188   2                              cj.dac_lim = 1;
+ 189   2                              cj.d_save = 0;
+ 190   2                              cj.dac = 0;
+ 191   2                              break;
+ 192   2              }
+ 193   1              key_code = 0;
+ 194   1      }
+ 195          //****************************
+ 196          void tem_mainloop()
+ 197          {
+ 198   1              if(!f_800ms_tem)return;
+ 199   1              f_800ms_tem = 0;
+ 200   1              
+ 201   1              cj.t =  read_tem() ;
+ 202   1              if(cj.t>=80)cj.t=80;
+ 203   1              else if(cj.t<=0)cj.t=0;
+ 204   1              
+ 205   1              init_temp();
+ 206   1      }
+ 207          //****************************
+ 208          void wave_mainloop()
+ 209          {
+ 210   1              int dist_i;
+ 211   1              float dist_f;
+ 212   1              
+ 213   1              if(!f_1000ms_wave)return;
+ 214   1              f_1000ms_wave = 0;
+ 215   1              
+ 216   1              
+ 217   1              dist_f = read_d()/20000.0*cj.v_cal + cj.d_cal;
+ 218   1              dist_i = dist_f + 0.5 ;
+ 219   1              if(dist_i >= 90)
+ 220   1                      dist_i = 90;
+ 221   1              else if(dist_i <= 10)
+ 222   1                      dist_i = 10;
+ 223   1              
+ 224   1              cj.d = dist_i;
+ 225   1              
+ 226   1              if((cj.d >= cj.d_set - 5 && cj.d <= cj.d_set +5) && cj.t <= cj.t_set)
+ 227   1              {
+ 228   2                      on(JDQ);
+ 229   2              }else
+ 230   1              {
+ 231   2                      off(JDQ);
+ 232   2              }
+ 233   1              
+ 234   1              if(!(run_state==40 || run_state==41))return;//非记录的时候，不记录
+ 235   1              cj.d_[cj.index]=cj.d;//记录一组
+ 236   1              cj.v_[cj.index]=calc_dac_out(cj.d_[cj.index]);
+ 237   1              ++cj.index;
+ 238   1      }
+ 239          //****************************
+ 240          u8 calc_dac_out(u16 _dat)
+C51 COMPILER V9.59.0.0   MAIN                                                              06/05/2024 19:05:01 PAGE 5   
+
+ 241          {
+ 242   1              float _v;
+ 243   1              u8 tmp;
+ 244   1              if(_dat > 90)
+ 245   1                      tmp = 255;//5
+ 246   1              else if(_dat < 10)
+ 247   1                      tmp = 255* cj.dac_lim / 5;
+ 248   1              else
+ 249   1              {
+ 250   2                      _v = (cj.dac_lim - 5.0 )* (10.0-_dat)/80.0 + cj.dac_lim;
+ 251   2                      tmp = 255 *_v /5;
+ 252   2              }
+ 253   1              return tmp;
+ 254   1      }
+ 255          //****************************
+ 256          void led_mainloop()
+ 257          {
+ 258   1              if(!f_100ms_led)return;
+ 259   1              f_100ms_led = 0;
+ 260   1              
+ 261   1              switch(run_state)
+ 262   1              {
+ 263   2                      case 10:
+ 264   2                      case 11:
+ 265   2                      case 40:
+ 266   2                      case 41:
+ 267   2                              led_dat = cj.d;
+ 268   2                      break;
+ 269   2                      //
+ 270   2                      case 20:
+ 271   2                      case 21:
+ 272   2                              led_dat = 0;
+ 273   2                              L8 = 1;
+ 274   2                      break;
+ 275   2                      //
+ 276   2                      case 30:
+ 277   2                      case 31:
+ 278   2                      case 32:
+ 279   2                              L8=0;
+ 280   2                              L1 = !L1;
+ 281   2                      break;
+ 282   2              }
+ 283   1      }
+ 284          //****************************
+ 285          void adc_mainloop()
+ 286          {       
+ 287   1              if(run_state==40 || run_state==41)return;//记录的时候不输出
+ 288   1              
+ 289   1              if(!f_1000ms_adc)return;
+ 290   1              f_1000ms_adc=0;
+ 291   1              
+ 292   1              if(cj.f_dac)//允许输出
+ 293   1              {
+ 294   2                      if(cj.index)//采集到数据
+ 295   2                      {
+ 296   3                              write_dac(cj.v_[_index]);//dac
+ 297   3      
+ 298   3                              if(++_index>=cj.index)//输出结束
+ 299   3                              {
+ 300   4                                      _index=0;
+ 301   4                                      //cj.f_dac=0;
+ 302   4                              }
+C51 COMPILER V9.59.0.0   MAIN                                                              06/05/2024 19:05:01 PAGE 6   
+
+ 303   3                      }
+ 304   2      //              else 
+ 305   2      //              write_dac(calc_dac_out(0));
+ 306   2              }
+ 307   1      //      else 
+ 308   1      //      write_dac(0);
+ 309   1      }
+ 310          //****************************
+ 311          
+ 312          
+ 313          
+ 314          
+ 315          
+ 316          
+ 317          
+ 318          
+ 319          
+ 320          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   2088    ----
+   CONSTANT SIZE    =     99    ----
+   XDATA SIZE       =     63    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4      10
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

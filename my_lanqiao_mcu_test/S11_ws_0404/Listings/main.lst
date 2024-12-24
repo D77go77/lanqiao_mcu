@@ -1,0 +1,235 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 17:57:39 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /*
+   2          1）把每个赛题程序都当成  竞赛时的最终上传程序
+   3          2）工程包含的模块只能是竞赛时会写出来的模块
+   4          3）题目要逐行仔细分析，注意每一个细节要求。
+   5          4）程序编好后，认真修改，严格要求。
+   6          5）参考的只能是思路，实现要完全靠自己。
+   7          6）重要内容要有注释
+   8          */
+   9          #include "all.h"
+  10          //
+  11          volatile u8 bdata led_dat = 0;
+  12          sbit L1 = led_dat ^0;
+  13          sbit L2 = led_dat ^1;
+  14          sbit L3 = led_dat ^2;
+  15          sbit L4 = led_dat ^3;
+  16          sbit L5 = led_dat ^4;
+  17          sbit L6 = led_dat ^5;
+  18          sbit L7 = led_dat ^6;
+  19          sbit L8 = led_dat ^7;
+  20          //
+  21          xdata struct _cj cj;
+  22          //
+  23          u8 run_state = 0;
+  24          u8 k_err_cnt = 0;//无效按键次数
+  25          //
+  26          void main_init(void);
+  27          void state_mainloop(void);
+  28          void key_mainloop(void);
+  29          void led_mainloop(void);
+  30          void adc_mainloop(void);
+  31          //
+  32          void cnt_proc(void);
+  33          //*******************************
+  34          void main(void)
+  35          {
+  36   1              main_init();
+  37   1              EA = 1;
+  38   1              while(1)
+  39   1              {
+  40   2                      state_mainloop();
+  41   2                      key_mainloop();
+  42   2                      led_mainloop();
+  43   2                      adc_mainloop();
+  44   2              }
+  45   1      }
+  46          //****************************
+  47          void main_init(void)
+  48          {
+  49   1              u8 tmp;
+  50   1              off(JDQ);off(FMQ);
+  51   1              led_dat = 0;    
+  52   1              init_adc(0x03);
+  53   1              Timer1_Init();
+  54   1              
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 17:57:39 PAGE 2   
+
+  55   1              tmp = read_e2prom(0x00);
+  56   1              if(tmp>=50.0) tmp = 50;
+  57   1              cj.v_set=(float)tmp/10.0;
+  58   1              
+  59   1              run_state = 10;
+  60   1              cj.v=0;
+  61   1              
+  62   1              cj.cnt=0;
+  63   1              cj.adc = 0;
+  64   1      
+  65   1      }
+  66          //****************************
+  67          void state_mainloop(void)
+  68          {
+  69   1              if(!f_100ms_state) return;
+  70   1              f_100ms_state = 0;
+  71   1              
+  72   1              switch(run_state)
+  73   1              {
+  74   2                      case 10://数据界面
+  75   2                              sprintf(dis_str,"U    %4.2f",cj.v);
+  76   2                      break;
+  77   2                      case 20://参数界面
+  78   2                              sprintf(dis_str,"P    %4.2f",cj.v_set);
+  79   2                      break;
+  80   2                      case 30://计数界面
+  81   2                              sprintf(dis_str,"N%7bu",cj.cnt);
+  82   2                      break;
+  83   2              }
+  84   1              disp_tran();
+  85   1              cnt_proc();
+  86   1      }
+  87          //************************
+  88          void cnt_proc(void)//计数次数控制
+  89          {
+  90   1              static u8 f_down = 0;//检测沿
+  91   1              static u8 f_up = 0;
+  92   1              
+  93   1              if(cj.v>cj.v_set)//
+  94   1              f_up = 0xff;
+  95   1              
+  96   1              if(cj.v<cj.v_set && f_up)//下降沿检测
+  97   1              f_down = 0xff;
+  98   1              
+  99   1              if(f_down && f_up)
+ 100   1              {
+ 101   2                      cj.cnt++;
+ 102   2                      f_down = f_up = 0;
+ 103   2              }
+ 104   1      }
+ 105          //************************
+ 106          void key_mainloop(void)
+ 107          {
+ 108   1              u8 _i = 0;
+ 109   1              if(!f_20ms_key)return;
+ 110   1              f_20ms_key = 0;
+ 111   1              
+ 112   1              key_proc();
+ 113   1              if(!key_code)return;
+ 114   1              
+ 115   1              switch(key_code)
+ 116   1              {
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 17:57:39 PAGE 3   
+
+ 117   2                      case S12: 
+ 118   2                              switch(run_state)
+ 119   2                              {
+ 120   3                              case 10:run_state=20;k_err_cnt = 0;break;
+ 121   3                              case 20:run_state=30;write_e2prom(0,cj.v_set*10);k_err_cnt = 0;break;//参数界面保存
+ 122   3                              case 30:run_state=10;k_err_cnt = 0;break;
+ 123   3                              default:k_err_cnt++;break;//无效按键累加
+ 124   3                              }
+ 125   2      
+ 126   2                      break;
+ 127   2                      case S13:
+ 128   2                              switch(run_state)
+ 129   2                              {
+ 130   3                              case 30:cj.cnt = 0;k_err_cnt = 0;break;//清除
+ 131   3                              default:k_err_cnt++;break;//无效按键累加
+ 132   3                              }
+ 133   2                              
+ 134   2                      break;
+ 135   2                      case S16: 
+ 136   2                              switch(run_state)
+ 137   2                              {
+ 138   3                              case 20:
+ 139   3                                      cj.v_set+=0.5;k_err_cnt = 0;//清除无效按键累加
+ 140   3                                      if(cj.v_set>5.0)cj.v_set = 0;
+ 141   3                              break;
+ 142   3                              default:k_err_cnt++;break;//无效按键累加
+ 143   3                              }
+ 144   2                      break;
+ 145   2                      case S17:
+ 146   2                              switch(run_state)
+ 147   2                              {
+ 148   3                              case 20:
+ 149   3                                      cj.v_set-=0.5;k_err_cnt = 0;
+ 150   3                                      if(cj.v_set<0.0)cj.v_set = 5.0;
+ 151   3                              break;
+ 152   3                              default:k_err_cnt++;break;//无效按键累加
+ 153   3                              }
+ 154   2                      break;
+ 155   2                      default:k_err_cnt++;break;//无效按键累加
+ 156   2              }
+ 157   1              key_code = 0;
+ 158   1      }
+ 159          //*************************
+ 160          void led_mainloop(void)
+ 161          {
+ 162   1              static u16 _cnt = 0;
+ 163   1              
+ 164   1              if(!f_100ms_led)return;
+ 165   1              f_100ms_led = 0;
+ 166   1              
+ 167   1              if(cj.v > cj.v_set)//持续时间大于5s
+ 168   1              {
+ 169   2                      if(++_cnt >= 50)
+ 170   2                      {
+ 171   3                              L1 = 1;
+ 172   3                      }
+ 173   2              }else 
+ 174   1              {
+ 175   2                      _cnt = 0;//否则清零
+ 176   2                      L1 = 0;
+ 177   2              }
+ 178   1              
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 17:57:39 PAGE 4   
+
+ 179   1              if(cj.cnt%2)//计数值为奇数
+ 180   1                      L2 = 1;
+ 181   1              else L2 = 0;
+ 182   1              
+ 183   1              if(k_err_cnt>=3)//无效按键大于3次S12 S13 S16 S17
+ 184   1                      L3 = 1;
+ 185   1              else L3 = 0;
+ 186   1              
+ 187   1              P0 = ~led_dat;
+ 188   1              gate(LED);      
+ 189   1      }
+ 190          //*********************
+ 191          void adc_mainloop(void)
+ 192          {
+ 193   1              u8 tmp;
+ 194   1              
+ 195   1              if(!f_100ms_adc) return;
+ 196   1              f_100ms_adc = 0;
+ 197   1      
+ 198   1              tmp = read_adc();
+ 199   1              
+ 200   1              cj.adc = (u16)tmp*50.0/255; //10倍
+ 201   1              cj.v = (float)cj.adc/10.0;
+ 202   1      }
+ 203          //*************************
+ 204          
+ 205          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    779    ----
+   CONSTANT SIZE    =     28    ----
+   XDATA SIZE       =     10    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      7       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

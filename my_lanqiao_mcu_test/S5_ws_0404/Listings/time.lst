@@ -1,0 +1,78 @@
+C51 COMPILER V9.60.7.0   TIME                                                              04/04/2024 16:21:36 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN .\Objects\time.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE time.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -time.lst) OBJECT(.\Objects\time.obj)
+
+line level    source
+
+   1          #include <time.h>
+   2          
+   3          bit f_20ms_key =0;
+   4          bit f_100ms_state =0;
+   5          bit f_100ms_temp =0;
+   6          bit f_100ms_led =0;
+   7          
+   8          
+   9          void time_mainloop();
+  10          
+  11          
+  12          void Timer1_Init(void)          //2毫秒@12.000MHz
+  13          {
+  14   1              AUXR |= 0x40;                   //定时器时钟1T模式
+  15   1              TMOD &= 0x0F;                   //设置定时器模式
+  16   1              TL1 = 0x40;                             //设置定时初始值
+  17   1              TH1 = 0xA2;                             //设置定时初始值
+  18   1              TF1 = 0;                                //清除TF1标志
+  19   1              TR1 = 1;                                //定时器1开始计时
+  20   1              ET1 =1;
+  21   1      }
+  22          
+  23          void T1_isr() interrupt 3
+  24          {
+  25   1              time_mainloop();
+  26   1              disp_scan();
+  27   1      
+  28   1      }
+  29          
+  30          void time_mainloop()
+  31          {
+  32   1              static cnt_20ms =0;
+  33   1              static cnt_100ms =0;
+  34   1      
+  35   1              
+  36   1              if(++cnt_20ms >=10)
+  37   1              {
+  38   2                      cnt_20ms =0;
+  39   2                      f_20ms_key =1;
+  40   2              }
+  41   1              
+  42   1              if(++cnt_100ms >=50)
+  43   1              {
+  44   2                      cnt_100ms =0;
+  45   2                      f_100ms_state =1;
+  46   2                      f_100ms_temp =1;                
+  47   2                      f_100ms_led =1;
+  48   2              }
+  49   1              
+  50   1              
+  51   1      }
+  52          
+
+
+C51 COMPILER V9.60.7.0   TIME                                                              04/04/2024 16:21:36 PAGE 2   
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    138    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      4    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      4    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

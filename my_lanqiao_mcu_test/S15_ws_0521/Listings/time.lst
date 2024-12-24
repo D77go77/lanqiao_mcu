@@ -1,0 +1,103 @@
+C51 COMPILER V9.60.7.0   TIME                                                              05/22/2024 19:14:47 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN .\Objects\time.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE time.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -time.lst) OBJECT(.\Objects\time.obj)
+
+line level    source
+
+   1          #include "time.h"
+   2          
+   3          //TIM
+   4          bit f_20ms_key = 0;
+   5          bit f_100ms_led = 0;
+   6          bit f_100ms_state = 0;
+   7          bit f_100ms_adc = 0;
+   8          bit f_100ms_wave = 0;
+   9          bit f_100ms_rtc = 0;
+  10          bit f_100ms_freq=0;
+  11          //
+  12          u16 freq=0;
+  13          //
+  14          void led_proc();
+  15          void tim_proc();
+  16          //************************
+  17          void ne555_Init(void)           
+  18          {
+  19   1      //      AUXR |= 0x80;           //定时器时钟1T模式
+  20   1              TMOD &= 0xF0;           //设置定时器模式
+  21   1              TMOD |= 0x05;
+  22   1              TL0 = 0x00;             //设置定时初值
+  23   1              TH0 = 0x00;             //设置定时初值
+  24   1              TF0 = 0;                //清除TF0标志
+  25   1              TR0 = 1;                //定时器0开始计时
+  26   1      }
+  27          
+  28          //
+  29          void Timer1_Init(void)          //2毫秒@12.000MHz
+  30          {
+  31   1              AUXR |= 0x40;                   //定时器时钟1T模式
+  32   1              TMOD &= 0x0F;                   //设置定时器模式
+  33   1              TL1 = 0x40;                             //设置定时初始值
+  34   1              TH1 = 0xA2;                             //设置定时初始值
+  35   1              TF1 = 0;                                //清除TF1标志
+  36   1              TR1 = 1;                                //定时器1开始计时
+  37   1              ET1 = 1;                                //使能定时器1中断
+  38   1      }
+  39          //
+  40          void Timer1_Isr(void) interrupt 3//2ms
+  41          {
+  42   1              tim_proc();
+  43   1              disp_scan();    
+  44   1      }
+  45          //***********************************
+  46          void tim_proc()
+  47          {
+  48   1              static u8 cnt_20ms=0;
+  49   1              static u8 cnt_100ms=0;
+  50   1              static u16 cnt_1s=0;
+  51   1      
+  52   1              if(++cnt_20ms>=10)
+  53   1              {
+  54   2                      cnt_20ms=0;f_20ms_key=1;
+C51 COMPILER V9.60.7.0   TIME                                                              05/22/2024 19:14:47 PAGE 2   
+
+  55   2              }
+  56   1              if(++cnt_100ms>=50)
+  57   1              {
+  58   2                      cnt_100ms=0;f_100ms_state=1;f_100ms_wave=1;f_100ms_led=1;f_100ms_rtc=1;f_100ms_adc=1;f_100ms_freq=1;
+  59   2                      led_proc();
+  60   2              }
+  61   1              if(++cnt_1s>=1000)
+  62   1              {
+  63   2                      cnt_1s=0;
+  64   2                      freq=(u16)TH0<<8|TL0;
+  65   2                      TH0=TL0=0;
+  66   2              }
+  67   1      }
+  68          //*****************************
+  69          void led_proc()
+  70          {
+  71   1              P0=~led_dat;
+  72   1              gate(LED);
+  73   1      }
+  74          //******************
+  75          
+  76          
+  77          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    186    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      6    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      7    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

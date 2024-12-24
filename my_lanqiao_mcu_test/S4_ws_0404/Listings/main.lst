@@ -1,0 +1,242 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:35:00 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /*
+   2          1）把每个赛题程序都当成  竞赛时的最终上传程序
+   3          2）工程包含的模块只能是竞赛时会写出来的模块
+   4          3）题目要逐行仔细分析，注意每一个细节要求。
+   5          4）程序编好后，认真修改，严格要求。
+   6          5）参考的只能是思路，实现要完全靠自己。
+   7          6）重要内容要有注释
+   8          */
+   9          #include "all.h"
+  10          //led
+  11          volatile u8 bdata led_dat=0;
+  12          sbit L1=led_dat^0;
+  13          sbit L2=led_dat^1;
+  14          sbit L3=led_dat^2;
+  15          sbit L4=led_dat^3;
+  16          sbit L5=led_dat^4;
+  17          sbit L6=led_dat^5;
+  18          sbit L7=led_dat^6;
+  19          sbit L8=led_dat^7;
+  20          //
+  21          xdata struct _cj cj;
+  22          //var
+  23          u8 run_state=10;
+  24          //******************************************************
+  25          void main_init(void);
+  26          //
+  27          void key_mainloop(void);
+  28          void led_mainloop(void);
+  29          void state_mainloop(void);
+  30          void rtc_mainloop(void);
+  31          void adc_mainloop(void);
+  32          void jdq_proc(void);
+  33          //******************************************************
+  34          void main(void)
+  35          {
+  36   1              main_init();
+  37   1              EA = 1;
+  38   1              //
+  39   1              while (1)
+  40   1              {               
+  41   2                      key_mainloop();         
+  42   2                      state_mainloop();
+  43   2                      rtc_mainloop();
+  44   2                      adc_mainloop();
+  45   2                      led_mainloop();
+  46   2              }
+  47   1      }
+  48          //******************************************************
+  49          void state_mainloop(void)
+  50          {
+  51   1              if(!f_100ms_state)return;
+  52   1              f_100ms_state=0;
+  53   1      
+  54   1              switch(run_state)
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:35:00 PAGE 2   
+
+  55   1              {
+  56   2                      case 10://时间湿度界面
+  57   2                              sprintf(dis_str,"%02bu-%02bu %02bu",cj.h,cj.m,cj.rh);
+  58   2                      break;
+  59   2                      
+  60   2                      case 20://设定界面
+  61   2                              sprintf(dis_str,"--    %02bu",cj.rh_tmp);
+  62   2                      break;
+  63   2              }
+  64   1              disp_tran();    
+  65   1      }
+  66          
+  67          //******************************************************
+  68          void jdq_proc(void)
+  69          {
+  70   1              switch(cj.mode)
+  71   1              {
+  72   2                      case 0://自动模式
+  73   2                              L1=1;
+  74   2                              if(cj.rh < cj.rh_set) 
+  75   2                              {
+  76   3                                      on(JDQ);
+  77   3                              }
+  78   2                              else off(JDQ);
+  79   2                      break;
+  80   2                      case 0xff://手动模式
+  81   2                              L2=1;
+  82   2                              if(cj.rh < cj.rh_set && cj.f_fmq)
+  83   2                              {
+  84   3                                      on(FMQ);
+  85   3                              }else off(FMQ);
+  86   2                              //
+  87   2                              if(cj.f_jdq)
+  88   2                              {
+  89   3                                      on(JDQ);
+  90   3                              }else off(JDQ);
+  91   2                      break;
+  92   2              }
+  93   1      }
+  94          //*******************************
+  95          void adc_mainloop(void)
+  96          {
+  97   1              u8 tmp;
+  98   1              if (!f_100ms_adc)       return;
+  99   1              f_100ms_adc = 0;
+ 100   1              //
+ 101   1              tmp=read_adc();//电位器读取
+ 102   1              cj.rh=(u16)tmp*99/255;
+ 103   1      }
+ 104          //******************************************************
+ 105          void rtc_mainloop(void)//获取时间
+ 106          {
+ 107   1              u8 h,m,s;
+ 108   1              static u8 s_old=0;
+ 109   1              
+ 110   1              if(!f_100ms_rtc)return;
+ 111   1              f_100ms_rtc=0;
+ 112   1              //P12=0;        
+ 113   1              h=Read_Ds1302_Byte(0x85);
+ 114   1              m=Read_Ds1302_Byte(0x83);
+ 115   1              s=Read_Ds1302_Byte(0x81);
+ 116   1              //P12=1;
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:35:00 PAGE 3   
+
+ 117   1              if(s_old==s)return;//秒没有更新，说明没到一秒，直接退。
+ 118   1              s_old=s;
+ 119   1              
+ 120   1              cj.h = (h>>4)*10 + (h&0x0f);
+ 121   1              cj.m = (m>>4)*10 + (m&0x0f);
+ 122   1              cj.s = (s>>4)*10 + (s&0x0f);
+ 123   1      }
+ 124          //******************************************************
+ 125          void main_init(void)
+ 126          {
+ 127   1              off(JDQ);off(FMQ);
+ 128   1              led_dat = 0;    
+ 129   1              ds1302_init();//hms
+ 130   1              ds1302_run(0x08,0x30,0x00);//hms
+ 131   1              init_adc(0x03); //Rb2
+ 132   1              Timer1_Init();
+ 133   1              
+ 134   1              run_state=10;
+ 135   1              cj. h=8;
+ 136   1              cj. m=30;
+ 137   1              cj. s=0;
+ 138   1              
+ 139   1              cj. rh=0;//湿度
+ 140   1              cj. rh_set = read_eeprom(0);//读取设定值0~99
+ 141   1              if(cj. rh_set > 99)cj. rh_set=50;
+ 142   1              cj. rh_tmp=cj. rh_set;
+ 143   1              cj. mode=0;//0为自动 ff为手动
+ 144   1              cj. f_jdq=0;//关闭
+ 145   1              cj. f_fmq=0;
+ 146   1              //
+ 147   1      }
+ 148          //******************************************************
+ 149          void key_mainloop(void)
+ 150          {
+ 151   1              if(!f_20ms_key)return;
+ 152   1              f_20ms_key = 0;
+ 153   1              
+ 154   1              key_proc();
+ 155   1              if(!key_code)return;
+ 156   1              
+ 157   1              switch(key_code)
+ 158   1              {
+ 159   2                      case S4://--
+ 160   2                              switch(run_state)
+ 161   2                              {
+ 162   3                                      case 10:
+ 163   3                                              if(cj.mode==0xff)cj.f_jdq=0;break;//手动模式//关闭
+ 164   3                                      break;
+ 165   3                                      case 20:if(--cj.rh_tmp>=99)cj.rh_tmp=0;break;
+ 166   3                              }
+ 167   2                              break;
+ 168   2                      case S5://++
+ 169   2                              switch(run_state)
+ 170   2                              {
+ 171   3                                      case 10:
+ 172   3                                              if(cj.mode==0xff)cj.f_jdq=1;break;//手动模式//开启
+ 173   3                                      break;
+ 174   3                                      case 20:if(++cj.rh_tmp>=99)cj.rh_tmp=99;break;
+ 175   3                              }
+ 176   2                              break;  
+ 177   2                      case S6:
+ 178   2                              switch(run_state)
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:35:00 PAGE 4   
+
+ 179   2                              {
+ 180   3                                      case 10:
+ 181   3                                              switch(cj.mode)
+ 182   3                                              {       
+ 183   4                                                      case 0:run_state=20;break;//自动模式
+ 184   4                                                      case 0xff:cj.f_fmq=~cj.f_fmq;break;//手动模式//开关fmq
+ 185   4                                              }
+ 186   3                                      break;
+ 187   3                                      case 20:run_state=10;
+ 188   3                                                      write_eeprom(0,cj.rh_tmp);
+ 189   3                                                      cj.rh_set=cj.rh_tmp;break;//保存
+ 190   3                              }
+ 191   2                              break;
+ 192   2                      case S7:
+ 193   2                              switch(run_state)
+ 194   2                              {
+ 195   3                                      case 10:cj.mode=~cj.mode;break;//切换模式
+ 196   3                              }
+ 197   2                              break;
+ 198   2              }
+ 199   1              key_code = 0;
+ 200   1      }
+ 201          //******************************************************
+ 202          void led_mainloop(void)
+ 203          {       
+ 204   1              if (!f_100ms_led) return;
+ 205   1              f_100ms_led = 0;
+ 206   1              led_dat=0;
+ 207   1              
+ 208   1              jdq_proc();//继电器蜂鸣器led控制
+ 209   1              //
+ 210   1              P0 = ~led_dat;
+ 211   1              gate(LED);
+ 212   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    572    ----
+   CONSTANT SIZE    =     30    ----
+   XDATA SIZE       =      9    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      3       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

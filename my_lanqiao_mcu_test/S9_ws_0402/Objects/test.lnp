@@ -1,0 +1,13 @@
+".\Objects\main.obj",
+".\Objects\time.obj",
+".\Objects\key.obj",
+".\Objects\led8.obj",
+".\Objects\wave.obj",
+".\Objects\ctrl.obj",
+".\Objects\ds1302.obj",
+".\Objects\iic.obj",
+".\Objects\onewire.obj",
+".\Objects\uart.obj" 
+TO ".\Objects\test" 
+PRINT(".\Listings\test.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

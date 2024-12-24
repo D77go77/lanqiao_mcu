@@ -1,0 +1,113 @@
+C51 COMPILER V9.60.7.0   LED8                                                              04/04/2024 16:21:35 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED8
+OBJECT MODULE PLACED IN .\Objects\led8.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE led8.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -led8.lst) OBJECT(.\Objects\led8.obj)
+
+line level    source
+
+   1          #include <led8.h>
+   2          u8 disp_blink[8]={0,0,0,0,0,0,0,0};
+   3          u8 disp_buf[8]={0,0,0,0,0,0,0,0};
+   4          u8 disp_str[11]= {0};
+   5          code unsigned char Seg_Table[] ;
+   6          void disp_scan()
+   7          {
+   8   1              static u8 i =0;
+   9   1              
+  10   1              P0 =0;
+  11   1              gate(W8);
+  12   1              
+  13   1              P0 = disp_buf[i] |disp_blink[i];
+  14   1              gate(D8);
+  15   1              
+  16   1              P0 = 1<<i;
+  17   1              gate(W8);
+  18   1              
+  19   1              if(++i>=8) i=0;
+  20   1              
+  21   1      }
+  22          
+  23          code unsigned char Seg_Table[] = 
+  24          {
+  25          0xc0, //0
+  26          0xf9, //1
+  27          0xa4, //2
+  28          0xb0, //3
+  29          0x99, //4
+  30          0x92, //5
+  31          0x82, //6
+  32          0xf8, //7
+  33          0x80, //8
+  34          0x90, //9
+  35          0x88, //A
+  36          0x83, //b
+  37          0xc6, //C
+  38          0xa1, //d
+  39          0x86, //E
+  40          0x8e, //F
+  41          0xbf,  //-
+  42          0xC1, //U
+  43          0x8c, //P
+  44          0xC8  //N
+  45          };
+  46          
+  47          void disp_tran()
+  48          {
+  49   1              u8 i,j;
+  50   1              u8 temp =0;
+  51   1              
+  52   1              for(i=0;i<8;i++,j++)
+  53   1              {
+  54   2                      switch(disp_str[j])
+C51 COMPILER V9.60.7.0   LED8                                                              04/04/2024 16:21:35 PAGE 2   
+
+  55   2                      {
+  56   3                              case '0':temp = Seg_Table[0];break;
+  57   3                              case '1':temp = Seg_Table[1];break;
+  58   3                              case '2':temp = Seg_Table[2];break;
+  59   3                              case '3':temp = Seg_Table[3];break;
+  60   3                              case '4':temp = Seg_Table[4];break;
+  61   3                              case '5':temp = Seg_Table[5];break;
+  62   3                              case '6':temp = Seg_Table[6];break;
+  63   3                              case '7':temp = Seg_Table[7];break;
+  64   3                              case '8':temp = Seg_Table[8];break;
+  65   3                              case '9':temp = Seg_Table[9];break;
+  66   3                              case 'A':temp = Seg_Table[10];break;
+  67   3                              case 'b':temp = Seg_Table[11];break;
+  68   3                              case 'C':temp = Seg_Table[12];break;
+  69   3                              case 'd':temp = Seg_Table[13];break;
+  70   3                              case 'E':temp = Seg_Table[14];break;
+  71   3                              case 'F':temp = Seg_Table[15];break;
+  72   3                              case '-':temp = Seg_Table[16];break;
+  73   3                              case 'U':temp = Seg_Table[17];break;
+  74   3                              case 'P':temp = Seg_Table[18];break;
+  75   3                              case 'N':temp = Seg_Table[19];break;
+  76   3                              case ' ':temp = 0xff;break;
+  77   3                              default:temp = 0xff;break;
+  78   3                      
+  79   3                      }
+  80   2                      if(disp_str[j+1]=='.')
+  81   2                      {
+  82   3                              temp &= 0x7f;
+  83   3                              j++;
+  84   3                      }
+  85   2                      disp_buf[i] = temp;
+  86   2              }
+  87   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    307    ----
+   CONSTANT SIZE    =     20    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     28       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

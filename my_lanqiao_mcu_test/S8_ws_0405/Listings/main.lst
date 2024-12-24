@@ -1,0 +1,300 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:01:52 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /*
+   2          1）把每个赛题程序都当成  竞赛时的最终上传程序
+   3          2）工程包含的模块只能是竞赛时会写出来的模块
+   4          3）题目要逐行仔细分析，注意每一个细节要求。
+   5          4）程序编好后，认真修改，严格要求。
+   6          5）参考的只能是思路，实现要完全靠自己。
+   7          6）重要内容要有注释
+   8          */
+   9          #include "all.h"
+  10          //
+  11          volatile u8 bdata led_dat = 0;
+  12          sbit L1 = led_dat ^0;
+  13          //
+  14          u8 bdata blink8_dat=0;
+  15          //
+  16          xdata struct _cj cj;
+  17          //
+  18          u8 run_state = 0;
+  19          bit f_led = 0;
+  20          //
+  21          void main_init(void);
+  22          void state_mainloop(void);
+  23          void key_mainloop(void);
+  24          void led_mainloop(void);
+  25          void rtc_mainloop(void);
+  26          void temper_mainloop(void);
+  27          void blink8_mainloop(void);
+  28          void temper_mainloop(void);
+  29          
+  30          void Delay5ms();
+  31          //*******************************
+  32          void main(void)
+  33          {
+  34   1              main_init();
+  35   1              EA = 1;
+  36   1              while(1)
+  37   1              {
+  38   2                      state_mainloop();
+  39   2                      key_mainloop();
+  40   2                      rtc_mainloop();
+  41   2                      led_mainloop();
+  42   2                      temper_mainloop();
+  43   2                      blink8_mainloop();
+  44   2              }
+  45   1      }
+  46          //****************************
+  47          void main_init(void)
+  48          {
+  49   1              off(JDQ);off(FMQ);
+  50   1              led_dat = 0;    
+  51   1              Timer1_Init();
+  52   1              ds1302_init();
+  53   1              ds1302_run(0x23,0x59,0x50);
+  54   1              
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:01:52 PAGE 2   
+
+  55   1              run_state = 10;
+  56   1              
+  57   1              cj. h_set=0;//闹钟值
+  58   1              cj. m_set=0;
+  59   1              cj. s_set=0;
+  60   1              
+  61   1              cj. h_tmp=0;//设置值
+  62   1              cj. m_tmp=0;
+  63   1              cj. s_tmp=0;
+  64   1              
+  65   1              cj. t=0;
+  66   1              start_ds18b20();
+  67   1              Delay5ms();
+  68   1      }
+  69          //****************************
+  70          void state_mainloop(void)
+  71          {
+  72   1              if(!f_100ms_state) return;
+  73   1              f_100ms_state = 0;
+  74   1              
+  75   1              switch(run_state)
+  76   1              {
+  77   2                      case 10://时钟界面
+  78   2                              blink8_dat = 0;
+  79   2                              if(key_code == S4)
+  80   2                                      sprintf(dis_str,"     %02buC",cj.t);    
+  81   2                              else
+  82   2                                      sprintf(dis_str,"%02bu-%02bu-%02bu",cj.h,cj.m,cj.s);
+  83   2                      break;
+  84   2                      case 20://时钟设置界面h
+  85   2                              blink8_dat = 0x03;
+  86   2                              sprintf(dis_str,"%02bu-%02bu-%02bu",cj.h_tmp,cj.m_tmp,cj.s_tmp);
+  87   2                      break;
+  88   2                      case 21://时钟设置界面m
+  89   2                              blink8_dat = 0x18;
+  90   2                              sprintf(dis_str,"%02bu-%02bu-%02bu",cj.h_tmp,cj.m_tmp,cj.s_tmp);
+  91   2                      break;
+  92   2                      case 22://时钟设置界面s
+  93   2                              blink8_dat = 0xc0;
+  94   2                              sprintf(dis_str,"%02bu-%02bu-%02bu",cj.h_tmp,cj.m_tmp,cj.s_tmp);
+  95   2                      break;
+  96   2                      case 30://闹钟设置界面h
+  97   2                              blink8_dat = 0x03;
+  98   2                              sprintf(dis_str,"%02bu-%02bu-%02bu",cj.h_tmp,cj.m_tmp,cj.s_tmp);
+  99   2                      break;  
+ 100   2                      case 31://闹钟设置界面m
+ 101   2                              blink8_dat = 0x18;
+ 102   2                              sprintf(dis_str,"%02bu-%02bu-%02bu",cj.h_tmp,cj.m_tmp,cj.s_tmp);
+ 103   2                      break;
+ 104   2                      case 32://闹钟设置界面s
+ 105   2                              blink8_dat = 0xc0;
+ 106   2                              sprintf(dis_str,"%02bu-%02bu-%02bu",cj.h_tmp,cj.m_tmp,cj.s_tmp);
+ 107   2                      break;
+ 108   2              }
+ 109   1              disp_tran();
+ 110   1      }
+ 111          //************************
+ 112          void key_mainloop(void)
+ 113          {
+ 114   1              u8 _i = 0;
+ 115   1              if(!f_20ms_key)return;
+ 116   1              f_20ms_key = 0;
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:01:52 PAGE 3   
+
+ 117   1              
+ 118   1              key_proc();
+ 119   1              if(!key_code)return;
+ 120   1              f_led = 0;//按任意键，关闭闪烁
+ 121   1              switch(key_code)
+ 122   1              {
+ 123   2                      case S4: //--
+ 124   2                              switch(run_state)
+ 125   2                              {
+ 126   3                                      case 20:if(--cj.h_tmp>23)cj.h_tmp=23;break;
+ 127   3                                      case 21:if(--cj.m_tmp>59)cj.m_tmp=59;break;
+ 128   3                                      case 22:if(--cj.s_tmp>59)cj.s_tmp=59;break;
+ 129   3                                      case 30:if(--cj.h_tmp>23)cj.h_tmp=23;break;     
+ 130   3                                      case 31:if(--cj.m_tmp>59)cj.m_tmp=59;break;
+ 131   3                                      case 32:if(--cj.s_tmp>59)cj.s_tmp=59;break;
+ 132   3                              }
+ 133   2                      break;
+ 134   2                      case S5://++
+ 135   2                              switch(run_state)
+ 136   2                              {
+ 137   3                                      case 20:if(++cj.h_tmp>23)cj.h_tmp=0;break;
+ 138   3                                      case 21:if(++cj.m_tmp>59)cj.m_tmp=0;break;
+ 139   3                                      case 22:if(++cj.s_tmp>59)cj.s_tmp=0;break;
+ 140   3                                      case 30:if(++cj.h_tmp>23)cj.h_tmp=0;break;      
+ 141   3                                      case 31:if(++cj.m_tmp>59)cj.m_tmp=0;break;
+ 142   3                                      case 32:if(++cj.s_tmp>59)cj.s_tmp=0;break;
+ 143   3                              }
+ 144   2                      break;
+ 145   2                      case S7: //时钟设置
+ 146   2                              switch(run_state)
+ 147   2                              {
+ 148   3                                      case 10:run_state = 30;
+ 149   3                                              cj.h_tmp = cj.h;
+ 150   3                                              cj.m_tmp = cj.m;
+ 151   3                                              cj.s_tmp = cj.s;
+ 152   3                                      break;
+ 153   3                                      case 30:run_state = 31;break;   
+ 154   3                                      case 31:run_state = 32;break;
+ 155   3                                      case 32:run_state = 10;
+ 156   3                                              cj.h = cj.h_tmp;
+ 157   3                                              cj.m = cj.m_tmp;
+ 158   3                                              cj.s = cj.s_tmp;
+ 159   3                                              ds1302_run((cj.h/10*16+cj.h%10), \
+ 160   3                                                                      (cj.m/10*16+cj.m%10), \
+ 161   3                                                                              (cj.s/10*16+cj.s%10));//保存运行时钟
+ 162   3                                      break;
+ 163   3                              }
+ 164   2                      break;
+ 165   2                      case S6: //闹钟设置
+ 166   2                              switch(run_state)
+ 167   2                              {
+ 168   3                                      case 10:run_state = 20;
+ 169   3                                              cj.h_tmp = cj.h_set;
+ 170   3                                              cj.m_tmp = cj.m_set;
+ 171   3                                              cj.s_tmp = cj.s_set;
+ 172   3                                      break;
+ 173   3                                      case 20:run_state = 21;break;
+ 174   3                                      case 21:run_state = 22;break;
+ 175   3                                      case 22:run_state = 10;
+ 176   3                                              cj.h_set = (u8)cj.h_tmp;
+ 177   3                                              cj.m_set = (u8)cj.m_tmp;
+ 178   3                                              cj.s_set = (u8)cj.s_tmp;
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:01:52 PAGE 4   
+
+ 179   3                                      break;
+ 180   3                              }
+ 181   2                      break;
+ 182   2              }
+ 183   1              if(key_code == S4 && run_state == 10)return;
+ 184   1              key_code = 0;
+ 185   1      }
+ 186          //*************************
+ 187          void led_mainloop(void)
+ 188          {
+ 189   1              static _cnt5s = 0;
+ 190   1              static _cnt200ms = 0;
+ 191   1              if(!f_100ms_led)return;
+ 192   1              f_100ms_led = 0;
+ 193   1              
+ 194   1              if(cj.m_set == cj.m && cj.s_set == cj.s)//整点
+ 195   1              {f_led  = 1;_cnt5s=0;}//开始闪烁
+ 196   1              
+ 197   1              if(f_led)//
+ 198   1              {
+ 199   2                      if(++_cnt200ms>=2)
+ 200   2                      {
+ 201   3                              L1 = ~L1;_cnt200ms = 0;
+ 202   3                      }
+ 203   2                      if(++_cnt5s >= 50) f_led = 0;
+ 204   2              }else L1 = 0;
+ 205   1              
+ 206   1              P0 = ~led_dat;
+ 207   1              gate(LED);      
+ 208   1      }
+ 209          //*****************************
+ 210          void rtc_mainloop(void)
+ 211          {
+ 212   1              u8 h,m,s;
+ 213   1              static u8 s_old=0;
+ 214   1              
+ 215   1              if(!f_100ms_rtc)return;
+ 216   1              f_100ms_rtc=0;
+ 217   1              h=Read_Ds1302_Byte(0x85);
+ 218   1              m=Read_Ds1302_Byte(0x83);
+ 219   1              s=Read_Ds1302_Byte(0x81);
+ 220   1              if(s_old==s)return;//秒没有更新，说明没到一秒，直接退。
+ 221   1              s_old=s;
+ 222   1              
+ 223   1              cj.h = (h>>4)*10 + (h&0x0f);
+ 224   1              cj.m = (m>>4)*10 + (m&0x0f);
+ 225   1              cj.s = (s>>4)*10 + (s&0x0f);
+ 226   1      }
+ 227          //**********************************
+ 228          void blink8_mainloop(void)
+ 229          {
+ 230   1              u8 i=0,tmp = 0;
+ 231   1              
+ 232   1              if (!f_1s_blink8) return;//500ms
+ 233   1              f_1s_blink8 = 0;
+ 234   1              
+ 235   1              //if(blink8_dat == 0)return;
+ 236   1              
+ 237   1              for(i = 0;i <8;i++)
+ 238   1              {
+ 239   2                      tmp  = blink8_dat & (1 << i);
+ 240   2                      if(tmp)
+C51 COMPILER V9.60.7.0   MAIN                                                              04/05/2024 18:01:52 PAGE 5   
+
+ 241   2                              dis_blink[i] = ~dis_blink[i];
+ 242   2                      else
+ 243   2                              dis_blink[i] = 0;
+ 244   2              }
+ 245   1      }
+ 246          //************************************
+ 247          void temper_mainloop(void)
+ 248          {
+ 249   1              u16 tmp;
+ 250   1              if(!f_800ms_temp)return;
+ 251   1              f_800ms_temp = 0;
+ 252   1      
+ 253   1              tmp=read_tem16();
+ 254   1              cj.t = (float)tmp*0.0625f;
+ 255   1              start_ds18b20();
+ 256   1      }
+ 257          //************************************
+ 258          void Delay5ms()         //@12.000MHz
+ 259          {
+ 260   1              unsigned char i, j;
+ 261   1      
+ 262   1              i = 59;
+ 263   1              j = 90;
+ 264   1              do
+ 265   1              {
+ 266   2                      while (--j);
+ 267   2              } while (--i);
+ 268   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =   1170    ----
+   CONSTANT SIZE    =     30    ----
+   XDATA SIZE       =     10    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      8       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

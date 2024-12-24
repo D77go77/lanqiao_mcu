@@ -1,0 +1,155 @@
+C51 COMPILER V9.60.7.0   TIME                                                              05/30/2024 13:18:18 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN .\Objects\time.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE time.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -time.lst) OBJECT(.\Objects\time.obj)
+
+line level    source
+
+   1          #include "time.h"
+   2          bit f_20ms_key=0;
+   3          bit f_100ms_state=0;
+   4          bit f_50ms_led=0;
+   5          bit f_100ms_wave=0;
+   6          bit f_100ms_adc=0;
+   7          bit f_800ms_tem=0;
+   8          bit f_freq = 0;
+   9          u8 f_on=0;
+  10          
+  11          u16 ping_dat=0;
+  12          u8 pwm_set=0;
+  13          
+  14          void tim_proc();
+  15          void led_proc();
+  16          void moto_proc();
+  17          void ne555_proc();
+  18          //*****************************
+  19          void ne555_init(void)   // 定时器0
+  20          {
+  21   1              TMOD &= 0xF0;           //设置定时器模式
+  22   1          TMOD |= 0x05;       
+  23   1              
+  24   1              TL0 = 0;                                //设置定时初始值
+  25   1              TH0 = 0;                                //设置定时初始值
+  26   1              TF0 = 0;                                //清除TF0标志
+  27   1              TR0 = 1;                                //定时器0开始计时
+  28   1      }
+  29          //
+  30          void Timer2_Init(void)          //200微秒@12.000MHz
+  31          {
+  32   1              AUXR |= 0x04;                   //定时器时钟1T模式
+  33   1              T2L = 0xA0;                             //设置定时初始值
+  34   1              T2H = 0xF6;                             //设置定时初始值
+  35   1              AUXR |= 0x10;                   //定时器2开始计时
+  36   1              IE2 |= 0x04;                    //使能定时器2中断
+  37   1      }
+  38          //
+  39          void Timer1_Init(void)          //2毫秒@12.000MHz
+  40          {
+  41   1              AUXR |= 0x40;                   //定时器时钟1T模式
+  42   1              TMOD &= 0x0F;                   //设置定时器模式
+  43   1              TL1 = 0x40;                             //设置定时初始值
+  44   1              TH1 = 0xA2;                             //设置定时初始值
+  45   1              TF1 = 0;                                //清除TF1标志
+  46   1              TR1 = 1;                                //定时器1开始计时
+  47   1              ET1 = 1;                                //使能定时器1中断
+  48   1      }
+  49          //**********************************
+  50          void Timer1_Isr(void) interrupt 3//2ms
+  51          {
+  52   1              tim_proc();
+  53   1              disp_scan();    
+  54   1              ne555_proc();
+C51 COMPILER V9.60.7.0   TIME                                                              05/30/2024 13:18:18 PAGE 2   
+
+  55   1      }
+  56          //
+  57          void Timer2_Isr(void) interrupt 12//200us
+  58          {
+  59   1              moto_proc();
+  60   1      }
+  61          //*****************************
+  62          void tim_proc()
+  63          {
+  64   1              static u8 cnt_20ms=0;
+  65   1              static u8 cnt_50ms=0;
+  66   1              static u8 cnt_100ms=0;
+  67   1              static u16 cnt_800ms=0;
+  68   1      
+  69   1              if(++cnt_20ms>=10)
+  70   1              {
+  71   2                      cnt_20ms=0;f_20ms_key=1;
+  72   2              }
+  73   1              if(++cnt_50ms>=25)
+  74   1              {
+  75   2                      cnt_50ms=0;f_50ms_led=1;
+  76   2              }
+  77   1              if(++cnt_100ms>=50)
+  78   1              {
+  79   2                      cnt_100ms=0;f_100ms_state=1;f_100ms_wave=1;f_100ms_adc=1;
+  80   2                      f_on=~f_on; 
+  81   2                      led_proc();
+  82   2                      f_freq=1;
+  83   2              }
+  84   1      
+  85   1              if(++cnt_800ms>=400)
+  86   1              {
+  87   2                      cnt_800ms=0;f_800ms_tem=1;
+  88   2              }
+  89   1      }
+  90          //*****************************
+  91          void led_proc()
+  92          {
+  93   1              P0=~led_dat;
+  94   1              gate(LED);
+  95   1      }
+  96          //******************
+  97          void moto_proc()
+  98          {
+  99   1              static u8 _cnt=0;
+ 100   1              
+ 101   1              if(++_cnt==5)_cnt=0;
+ 102   1              
+ 103   1              if(_cnt<pwm_set)
+ 104   1                      on(MOTO);
+ 105   1              else
+ 106   1                      off(MOTO);
+ 107   1      }
+ 108          //**********************
+ 109          void ne555_proc()
+ 110          {
+ 111   1              static u16 cnt_1000ms = 0;
+ 112   1      
+ 113   1              if(++cnt_1000ms >= 500)
+ 114   1              {
+ 115   2                      cnt_1000ms = 0;                 
+ 116   2                      ping_dat = ((u16)TH0 << 8) |TL0;//读取频率
+C51 COMPILER V9.60.7.0   TIME                                                              05/30/2024 13:18:18 PAGE 3   
+
+ 117   2                      TH0 = 0;TL0 = 0;
+ 118   2              }
+ 119   1      }
+ 120          
+ 121          
+ 122          
+ 123          
+ 124          
+ 125          
+ 126          
+ 127          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    328    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =     12    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      7    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

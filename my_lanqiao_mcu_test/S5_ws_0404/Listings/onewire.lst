@@ -1,0 +1,119 @@
+C51 COMPILER V9.60.7.0   ONEWIRE                                                           04/04/2024 16:21:36 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE ONEWIRE
+OBJECT MODULE PLACED IN .\Objects\onewire.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE onewire.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listin
+                    -gs\onewire.lst) OBJECT(.\Objects\onewire.obj)
+
+line level    source
+
+   1          /*      #       单总线代码片段说明
+   2                  1.      本文件夹中提供的驱动代码供参赛选手完成程序设计参考。
+   3                  2.      参赛选手可以自行编写相关代码或以该代码为基础，根据所选单片机类型、�
+             -�行速度和试题
+   4                          中对单片机时钟频率的要求，进行代码调试和修改。
+   5          */
+   6          #include <onewire.h>
+   7          //
+   8          void Delay_OneWire(unsigned int t)  
+   9          {
+  10   1              unsigned char i;
+  11   1              while(t--){
+  12   2                      for(i=0;i<12;i++);
+  13   2              }
+  14   1      }
+  15          
+  16          //
+  17          void Write_DS18B20(unsigned char dat)
+  18          {
+  19   1              unsigned char i;
+  20   1              for(i=0;i<8;i++)
+  21   1              {
+  22   2                      DQ = 0;
+  23   2                      DQ = dat&0x01;
+  24   2                      Delay_OneWire(5);
+  25   2                      DQ = 1;
+  26   2                      dat >>= 1;
+  27   2              }
+  28   1              Delay_OneWire(5);
+  29   1      }
+  30          
+  31          //
+  32          unsigned char Read_DS18B20(void)
+  33          {
+  34   1              unsigned char i;
+  35   1              unsigned char dat;
+  36   1        
+  37   1              for(i=0;i<8;i++)
+  38   1              {
+  39   2                      DQ = 0;
+  40   2                      dat >>= 1;
+  41   2                      DQ = 1;
+  42   2                      if(DQ)
+  43   2                      {
+  44   3                              dat |= 0x80;
+  45   3                      }           
+  46   2                      Delay_OneWire(5);
+  47   2              }
+  48   1              return dat;
+  49   1      }
+  50          
+  51          //
+  52          bit init_ds18b20(void)
+  53          {
+C51 COMPILER V9.60.7.0   ONEWIRE                                                           04/04/2024 16:21:36 PAGE 2   
+
+  54   1              bit initflag = 0;
+  55   1              
+  56   1              DQ = 1;
+  57   1              Delay_OneWire(12);
+  58   1              DQ = 0;
+  59   1              Delay_OneWire(80);
+  60   1              DQ = 1;
+  61   1              Delay_OneWire(10); 
+  62   1          initflag = DQ;     
+  63   1              Delay_OneWire(5);
+  64   1        
+  65   1              return initflag;
+  66   1      }
+  67          
+  68          
+  69          //**************************
+  70          void start_18B20()
+  71          {
+  72   1              init_ds18b20();
+  73   1              Write_DS18B20(0xcc);
+  74   1              Write_DS18B20(0x44);
+  75   1      }
+  76          
+  77          u16 read_tem16()
+  78          {
+  79   1              u8 L,H;
+  80   1              volatile u16 t16 =0;
+  81   1              
+  82   1              init_ds18b20();
+  83   1              Write_DS18B20(0xcc);
+  84   1              Write_DS18B20(0xbe);
+  85   1              
+  86   1              L = Read_DS18B20();
+  87   1              H = Read_DS18B20();
+  88   1              
+  89   1              t16 = (((u16)H)<<8) +L;
+  90   1              
+  91   1              return t16;
+  92   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    177    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       2
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----       1
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

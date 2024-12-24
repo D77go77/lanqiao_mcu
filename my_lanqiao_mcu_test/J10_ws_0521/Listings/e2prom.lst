@@ -1,0 +1,94 @@
+C51 COMPILER V9.60.7.0   E2PROM                                                            05/21/2024 19:25:53 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE E2PROM
+OBJECT MODULE PLACED IN .\Objects\e2prom.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE e2prom.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listing
+                    -s\e2prom.lst) OBJECT(.\Objects\e2prom.obj)
+
+line level    source
+
+   1          #include "stc15f2k60s2.h"
+   2          #include "intrins.h"
+   3          #include "e2prom.h"
+   4          /*************************************此文件只针对stc15f2k60s2编写，其他型号不通用************************
+             -**********************************/
+   5          #define CMD_IDLE 0              //空闲模式
+   6          #define CMD_READ 1              //IAP字节读命令
+   7          #define CMD_PROGRAM 2           //IAP字节编程命令
+   8          #define CMD_ERASE 3             //IAP扇区擦除命令
+   9          //#define ENABLE_IAP 0x80       //如果系统时钟<30MHz选这个
+  10          //#define ENABLE_IAP 0x81       //如果系统时钟<24MHz选这个
+  11          #define ENABLE_IAP 0x82         //如果系统时钟<20MHz选这个
+  12          //#define ENABLE_IAP 0x83       //如果系统时钟<12MHz选这个
+  13          //#define ENABLE_IAP 0x84       //如果系统时钟<6MHz选这个
+  14          //#define ENABLE_IAP 0x85       //如果系统时钟<3MHz选这个
+  15          //#define ENABLE_IAP 0x86       //如果系统时钟<2MHz选这个
+  16          //#define ENABLE_IAP 0x87       //如果系统时钟<1MHz选这个
+  17          //关闭IAP函数(禁止对EEPROM操作)
+  18          void IapIdle(void)
+  19          {
+  20   1              IAP_CONTR = 0 ;         //关闭IAP功能
+  21   1              IAP_CMD = 0 ;           //清除命令寄存器
+  22   1              IAP_TRIG = 0 ;          //清除触发寄存器
+  23   1              IAP_ADDRH = 0x80 ;      //将地址设置到非IAP地址区域
+  24   1              IAP_ADDRL = 0 ;
+  25   1              }
+  26          //从ISP/IAP/EEPROM区域读取1字节
+  27          unsigned char IapReadByte(unsigned int addr)
+  28          {
+  29   1              unsigned char dat;
+  30   1              IAP_CONTR = ENABLE_IAP; //使能IAP
+  31   1              IAP_CMD = CMD_READ;     //设置IAP命令为“读”
+  32   1              IAP_ADDRL = addr ;      //设置IAP低位地址
+  33   1              IAP_ADDRH = addr>>8 ;   //设置IAP高位地址
+  34   1              IAP_TRIG = 0x5a;        //写触发命令(0x5a)
+  35   1              IAP_TRIG = 0xa5;        //写触发命令(0xa5)[触发命令必须先送0x5a 再送0xa5才能成功触发]
+  36   1              _nop_();                //等待ISP/IAP/EEPROM操作完成
+  37   1              dat = IAP_DATA;         //读取ISP/IAP/EEPROM数据
+  38   1              IapIdle();              //关闭IAP功能
+  39   1              return dat;
+  40   1      }
+  41          //写1字节数据到从ISP/IAP/EEPROM区域
+  42          void IapProgramByte(unsigned int addr,unsigned char dat)
+  43          {
+  44   1              IAP_CONTR = ENABLE_IAP; //使能IAP
+  45   1              IAP_CMD = CMD_PROGRAM;  //设置IAP命令为“写”
+  46   1              IAP_ADDRL = addr ;      //设置IAP低位地址
+  47   1              IAP_ADDRH = addr>>8 ;   //设置IAP高位地址
+  48   1              IAP_DATA = dat;         //写ISP/IAP/EEPROM数据
+  49   1              IAP_TRIG = 0x5a;        //写触发命令(0x5a)
+  50   1              IAP_TRIG = 0xa5;        //写触发命令(0xa5)[触发命令必须先送0x5a 再送0xa5才能成功触发]
+  51   1              _nop_();                //等待ISP/IAP/EEPROM操作完成
+  52   1              IapIdle();              //关闭IAP功能
+  53   1      }
+C51 COMPILER V9.60.7.0   E2PROM                                                            05/21/2024 19:25:53 PAGE 2   
+
+  54          //扇区擦除(使用擦除扇区命令擦除整个扇区，stc15f2k60s2总共两个扇区,0x0000-0x01FF和0x0200-0x03FF,故addr=0x00
+             -00 或 0x0200)
+  55          //注意！在扇区地址存有数据后不可再次向此地址写数据，需全部清空所在扇区数据才可重新向此地址写入数据
+  56          void IapEraseSector(unsigned int addr)
+  57          {
+  58   1              IAP_CONTR = ENABLE_IAP; //使能IAP
+  59   1              IAP_CMD = CMD_ERASE;    //设置IAP命令为“擦除”
+  60   1              IAP_ADDRL = addr ;      //设置IAP低位地址
+  61   1              IAP_ADDRH = addr>>8 ;   //设置IAP高位地址
+  62   1              IAP_TRIG = 0x5a;        //写触发命令(0x5a)
+  63   1              IAP_TRIG = 0xa5;        //写触发命令(0xa5)[触发命令必须先送0x5a 再送0xa5才能成功触发]
+  64   1              _nop_();                //等待ISP/IAP/EEPROM操作完成
+  65   1              IapIdle();              //关闭IAP功能
+  66   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     77    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

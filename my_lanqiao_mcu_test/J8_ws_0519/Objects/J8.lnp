@@ -1,0 +1,10 @@
+".\Objects\main.obj",
+".\Objects\time.obj",
+".\Objects\smg.obj",
+".\Objects\key.obj",
+".\Objects\wave.obj",
+".\Objects\iic.obj",
+".\Objects\ctrl.obj" 
+TO ".\Objects\J8" 
+PRINT(".\Listings\J8.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

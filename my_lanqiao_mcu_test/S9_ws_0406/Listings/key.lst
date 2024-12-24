@@ -1,0 +1,97 @@
+C51 COMPILER V9.60.7.0   KEY                                                               04/06/2024 11:58:38 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE KEY
+OBJECT MODULE PLACED IN .\Objects\key.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE key.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\k
+                    -ey.lst) OBJECT(.\Objects\key.obj)
+
+line level    source
+
+   1          #include "key.h"
+   2          u8 key_code = 0;
+   3          
+   4          u8 getkey22(void)
+   5          {
+   6   1              u8 tmp = 0;
+   7   1              
+   8   1              P44=0;P42=1;
+   9   1              P33=1;P32=1;
+  10   1              if(!P33)tmp=1;
+  11   1              if(!P32)tmp+=3;
+  12   1      //      if(!P31)tmp+=5;
+  13   1      //      if(!P30)tmp+=7;
+  14   1              
+  15   1              P44=1;P42=0;
+  16   1              P33=1;P32=1;
+  17   1              if(!P33)tmp+=5;
+  18   1              if(!P32)tmp+=7;
+  19   1              
+  20   1              return tmp;
+  21   1      }
+  22          u8 getkeybtn(void)
+  23          {
+  24   1              u8 tmp=0;
+  25   1              P33 = P32 = P31 = P30 = 1;
+  26   1              if(!P33)tmp=1;
+  27   1              if(!P32)tmp=3;
+  28   1              if(!P31)tmp=5;
+  29   1              if(!P30)tmp=7;
+  30   1              return tmp;
+  31   1              
+  32   1      }
+  33          
+  34          void key_proc(void)
+  35          {
+  36   1              static u8 k_state = 0;
+  37   1              u8 k_tmp = 0;
+  38   1              
+  39   1              k_tmp = getkey22();//仿真
+  40   1              //k_tmp=getkeybtn();
+  41   1              
+  42   1              switch(k_state)
+  43   1              {
+  44   2                      case 0:
+  45   2                              if(k_tmp) k_state = 1;
+  46   2                              break;
+  47   2                      case 1:
+  48   2                              if(k_tmp)
+  49   2                              {
+  50   3                                      key_code = k_tmp;//按下执行
+  51   3                                      if(k_tmp == S4)
+  52   3                                      {
+  53   4                                              k_state = 3;//特殊按键处理
+  54   4                                      }else k_state =2;//普通按键处理
+C51 COMPILER V9.60.7.0   KEY                                                               04/06/2024 11:58:38 PAGE 2   
+
+  55   3                              }
+  56   2                              else k_state = 0;
+  57   2                              break;          
+  58   2                      case 2://普通
+  59   2                              if(!k_tmp)k_state = 0;
+  60   2                      break;
+  61   2                              //
+  62   2                      case 3://特殊
+  63   2                              if(!k_tmp)
+  64   2                              {
+  65   3                                      key_code=S4OFF;//松开返回
+  66   3                                      k_state = 0;
+  67   3                              }
+  68   2                      break;
+  69   2                              //
+  70   2              }
+  71   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    135    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

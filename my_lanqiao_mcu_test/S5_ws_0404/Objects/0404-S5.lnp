@@ -1,0 +1,9 @@
+".\Objects\main.obj",
+".\Objects\control.obj",
+".\Objects\key.obj",
+".\Objects\led8.obj",
+".\Objects\time.obj",
+".\Objects\onewire.obj" 
+TO ".\Objects\0404-S5" 
+PRINT(".\Listings\0404-S5.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 

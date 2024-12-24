@@ -1,0 +1,269 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              04/07/2024 20:31:45 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Objects\main.obj
+COMPILER INVOKED BY: D:\keilc51\c51\C51\BIN\C51.EXE main.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\
+                    -main.lst) OBJECT(.\Objects\main.obj)
+
+line level    source
+
+   1          /*
+   2          1）把每个赛题程序都当成  竞赛时的最终上传程序
+   3          2）工程包含的模块只能是竞赛时会写出来的模块
+   4          3）题目要逐行仔细分析，注意每一个细节要求。
+   5          4）程序编好后，认真修改，严格要求。
+   6          5）参考的只能是思路，实现要完全靠自己。
+   7          6）重要内容要有注释
+   8          */
+   9          #include "all.h"
+  10          //
+  11          volatile u8 bdata led_dat = 0;
+  12          sbit L1 = led_dat ^0;
+  13          sbit L2 = led_dat ^1;
+  14          sbit L3 = led_dat ^2;
+  15          sbit L4 = led_dat ^3;
+  16          sbit L5 = led_dat ^4;
+  17          sbit L6 = led_dat ^5;
+  18          sbit L7 = led_dat ^6;
+  19          sbit L8 = led_dat ^7;
+  20          //
+  21          xdata struct _cj cj;
+  22          //
+  23          u8 run_state = 0;
+  24          bit f_jdq = 0;//继电器开启标志
+  25          //
+  26          void main_init(void);
+  27          void state_mainloop(void);
+  28          void key_mainloop(void);
+  29          void temper_mainloop(void);
+  30          void led_mainloop(void);
+  31          void rtc_mainloop(void);
+  32          //
+  33          void Delay5ms(void);
+  34          void mode_proc(void);
+  35          //*******************************
+  36          void main(void)
+  37          {
+  38   1              main_init();
+  39   1              EA = 1;
+  40   1              while(1)
+  41   1              {
+  42   2      //              state_mainloop();
+  43   2      //              key_mainloop();
+  44   2      //              rtc_mainloop();
+  45   2      //              temper_mainloop();
+  46   2      //              led_mainloop();
+  47   2              }
+  48   1      }
+  49          //****************************
+  50          void main_init(void)
+  51          {
+  52   1              off(JDQ);off(FMQ);
+  53   1              led_dat = 0;    
+  54   1              Timer1_Init();
+C51 COMPILER V9.60.7.0   MAIN                                                              04/07/2024 20:31:45 PAGE 2   
+
+  55   1              ds1302_init();
+  56   1              ds1302_run(0x23,0x59,0x50);
+  57   1              
+  58   1              run_state = 10;
+  59   1              cj. t=0;//温度
+  60   1              cj. t_set=23;//温度参数
+  61   1              cj. t_tmp=23;//温度参数设置值
+  62   1              cj.mode = 0;//0为温度模式，ff为时间模式
+  63   1              cj. h=0x23;
+  64   1              cj. m=0x59;
+  65   1              cj. s=0x50;
+  66   1              
+  67   1              start_ds18b20();
+  68   1              Delay5ms();
+  69   1      }
+  70          //****************************
+  71          void state_mainloop(void)
+  72          {
+  73   1              if(!f_100ms_state) return;
+  74   1              f_100ms_state = 0;
+  75   1              
+  76   1              switch(run_state)
+  77   1              {
+  78   2                      case 10://温度界面
+  79   2                              sprintf(dis_str,"U1   %4.1f",cj.t);
+  80   2                      break;
+  81   2                      case 20://时间界面//hm
+  82   2                              sprintf(dis_str,"U2 %02bu-%02bu",cj.h,cj.m);
+  83   2                      break;
+  84   2                      case 21://ms
+  85   2                              sprintf(dis_str,"U2 %02bu-%02bu",cj.m,cj.s);
+  86   2                      break;
+  87   2                      case 30://参数界面
+  88   2                              sprintf(dis_str,"U3    %02bu",cj.t_tmp);
+  89   2                      break;
+  90   2              }
+  91   1              disp_tran();
+  92   1      }
+  93          //************************
+  94          void key_mainloop(void)
+  95          {
+  96   1              u8 _i = 0;
+  97   1              if(!f_20ms_key)return;
+  98   1              f_20ms_key = 0;
+  99   1              
+ 100   1              key_proc();
+ 101   1              if(!key_code)return;
+ 102   1              
+ 103   1              switch(key_code)
+ 104   1              {
+ 105   2                      case S12: //切换界面
+ 106   2                              switch(run_state)
+ 107   2                              {
+ 108   3                                      case 10:run_state=20;break;
+ 109   3                                      case 20:run_state=30;break;
+ 110   3                                      case 30:run_state=10;
+ 111   3                                                      cj.t_set=cj.t_tmp;//将设置值保存到真实值
+ 112   3                                      break;
+ 113   3                              }
+ 114   2                      break;
+ 115   2                      //
+ 116   2                      case S13://切换模式//0为温度控制，ff为时间控制
+C51 COMPILER V9.60.7.0   MAIN                                                              04/07/2024 20:31:45 PAGE 3   
+
+ 117   2                              cj.mode = ~cj.mode;
+ 118   2                              off(JDQ);f_jdq = 0;//切换模式并清除jdq打开情况
+ 119   2                      break;
+ 120   2                      //
+ 121   2                      case S16://++
+ 122   2                              switch(run_state)
+ 123   2                              {
+ 124   3                                      case 30:if(++cj.t_tmp > 99)cj.t_tmp = 10;break;
+ 125   3                              }
+ 126   2                      break;
+ 127   2                      //
+ 128   2                      case S17://--
+ 129   2                              switch(run_state)
+ 130   2                              {
+ 131   3                                      case 30:if(--cj.t_tmp < 10)cj.t_tmp = 99;break;
+ 132   3                                      case 20:run_state = 21;break;//按下进入ms
+ 133   3                              }
+ 134   2                      break;
+ 135   2                      //
+ 136   2                      case S17OFF:
+ 137   2                              switch(run_state)//松开返回hm
+ 138   2                              {
+ 139   3                                      case 21:run_state=20;break;
+ 140   3                              }
+ 141   2                              break;
+ 142   2              }
+ 143   1              key_code = 0;
+ 144   1      }
+ 145          //*************************
+ 146          void led_mainloop(void)
+ 147          {
+ 148   1              static u8 t = 0;
+ 149   1              if(!f_100ms_led)return;
+ 150   1              f_100ms_led = 0;
+ 151   1              
+ 152   1              if(cj.m == 0&&cj.s == 0) L1=1;//整点L1亮
+ 153   1              if(L1)
+ 154   1              {if(++t>=50) L1=0;}//L1亮后5秒后灭
+ 155   1              
+ 156   1              mode_proc();//模式以及继电器控制
+ 157   1              
+ 158   1              P0 = ~led_dat;
+ 159   1              gate(LED);      
+ 160   1      }
+ 161          //*************************
+ 162          void mode_proc(void)//模式以及继电器控制
+ 163          {
+ 164   1              static u8 t = 0;//计算5s
+ 165   1              switch(cj.mode)
+ 166   1              {
+ 167   2                      case 0://温度控制
+ 168   2                              L2=1;
+ 169   2                              if(cj.t > cj.t_set)//采集值>参数值//报警
+ 170   2                              {
+ 171   3                                      on(JDQ);f_jdq = 1;
+ 172   3                              }else 
+ 173   2                              {       
+ 174   3                                      off(JDQ);f_jdq=0;
+ 175   3                              }
+ 176   2                      break;
+ 177   2                      case 0xff://时间控制
+ 178   2                              L2=0;
+C51 COMPILER V9.60.7.0   MAIN                                                              04/07/2024 20:31:45 PAGE 4   
+
+ 179   2                              if(cj.m == 0&&cj.s == 0)//整点报警
+ 180   2                              {
+ 181   3                                      on(JDQ);f_jdq = 1;
+ 182   3                              }
+ 183   2                              if(f_jdq)
+ 184   2                              {
+ 185   3                                      if(++t >= 50)//5s后关jdq
+ 186   3                                      {
+ 187   4                                              t = 0;off(JDQ);f_jdq=0;
+ 188   4                                      }
+ 189   3                              }
+ 190   2                      break;
+ 191   2              }
+ 192   1              if(f_jdq)//jdq打开闪烁
+ 193   1                      L3 = ~L3;
+ 194   1              else L3=0;
+ 195   1      }
+ 196          //**************************8
+ 197          void temper_mainloop(void)
+ 198          {
+ 199   1              u16 tmp;
+ 200   1              if(!f_800ms_temp)return;
+ 201   1              f_800ms_temp = 0;
+ 202   1      
+ 203   1              tmp=read_tem16();
+ 204   1              cj.t = (float)tmp*0.0625f;
+ 205   1              start_ds18b20();
+ 206   1      }
+ 207          //*****************************
+ 208          void rtc_mainloop(void)
+ 209          {
+ 210   1              u8 h,m,s;
+ 211   1              static u8 s_old=0;
+ 212   1              
+ 213   1              if(!f_100ms_rtc)return;
+ 214   1              f_100ms_rtc=0;
+ 215   1              h=Read_Ds1302_Byte(0x85);
+ 216   1              m=Read_Ds1302_Byte(0x83);
+ 217   1              s=Read_Ds1302_Byte(0x81);
+ 218   1              if(s_old==s)return;//秒没有更新，说明没到一秒，直接退。
+ 219   1              s_old=s;
+ 220   1              
+ 221   1              cj.h = (h>>4)*10 + (h&0x0f);
+ 222   1              cj.m = (m>>4)*10 + (m&0x0f);
+ 223   1              cj.s = (s>>4)*10 + (s&0x0f);
+ 224   1      }
+ 225          //****************************
+ 226          void Delay5ms()         //@12.000MHz
+ 227          {
+ 228   1              unsigned char i, j;
+ 229   1      
+ 230   1              i = 59;
+ 231   1              j = 90;
+ 232   1              do
+ 233   1              {
+ 234   2                      while (--j);
+ 235   2              } while (--i);
+ 236   1      }
+ 237          
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.60.7.0   MAIN                                                              04/07/2024 20:31:45 PAGE 5   
+
+   CODE SIZE        =    632    ----
+   CONSTANT SIZE    =     38    ----
+   XDATA SIZE       =     10    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      5       3
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
