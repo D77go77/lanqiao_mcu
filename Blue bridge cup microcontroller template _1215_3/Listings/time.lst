@@ -1,0 +1,97 @@
+C51 COMPILER V9.59.0.0   TIME                                                              12/16/2024 17:10:15 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN .\Objects\time.obj
+COMPILER INVOKED BY: C:\Software\Keilv5\Keil\Core\C51\BIN\C51.EXE time.c OPTIMIZE(8,SPEED) BROWSE DEBUG OBJECTEXTEND PRI
+                    -NT(.\Listings\time.lst) OBJECT(.\Objects\time.obj)
+
+line level    source
+
+   1          #include "time.h"
+   2          idata unsigned long int uwTick = 0;   //系统计时变量
+   3          u8 f_on=0;//led闪烁标志
+   4          u8 f_wei=0;//smg闪烁标志
+   5          
+   6          void tim_proc();
+   7          //**************************
+   8          void Timer0_Init(void)
+   9          {
+  10   1        AUXR &= 0x7F; // 定时器时钟1ms 12T模式
+  11   1        TMOD &= 0xF0; // 设置定时器模式
+  12   1        TMOD |= 0x05; // 设置为模式5（定时器模式）//计数器模式
+  13   1        TL0 = 0;      // 设置初始值
+  14   1        TH0 = 0;      // 设置初始值
+  15   1        TF0 = 0;      // 清除TF0标志
+  16   1        TR0 = 1;      // 启动定时器0
+  17   1      }
+  18          //**************************
+  19          void Timer1_Init(void)          //2毫秒@12.000MHz
+  20          {
+  21   1              AUXR |= 0x40;                   //定时器时钟1T模式
+  22   1              TMOD &= 0x0F;                   //设置定时器模式
+  23   1              TL1 = 0x40;                             //设置定时初始值
+  24   1              TH1 = 0xA2;                             //设置定时初始值
+  25   1              TF1 = 0;                                //清除TF1标志
+  26   1              TR1 = 1;                                //定时器1开始计时
+  27   1              ET1 = 1;
+  28   1      }
+  29          
+  30          // 定时器1中断服务程序，每进入中断一次，uwTick自增1
+  31          void pit1() interrupt 3
+  32          {
+  33   1          uwTick++;//系统总运行时长
+  34   1          disp_scan(); // 调用数码管扫描函数
+  35   1          tim_proc();  // 调用时间处理函数
+  36   1      }
+  37          
+  38          // 时间处理函数，用于处理不同的时间间隔事件
+  39          void tim_proc()
+  40          {
+  41   1          static u8 cnt_20ms = 0;
+  42   1          static u32 cnt_800ms = 0;
+  43   1          static u32 cnt_1s = 0;
+  44   1          
+  45   1          // 每10次中断（即每20ms）执行一次LED扫描
+  46   1          if (++cnt_20ms >= 10) {
+  47   2              cnt_20ms = 0;
+  48   2              led_scan(); // 调用LED扫描函数
+  49   2          }
+  50   1      
+  51   1          // 每400次中断（即每800ms）切换f_wei和f_on的状态
+  52   1          if (++cnt_800ms >= 400) {
+  53   2              cnt_800ms = 0;
+  54   2              f_wei = !f_wei; // 切换f_wei状态
+C51 COMPILER V9.59.0.0   TIME                                                              12/16/2024 17:10:15 PAGE 2   
+
+  55   2              f_on = !f_on;   // 切换f_on状态
+  56   2          }
+  57   1          
+  58   1          // 每500次中断（即每1s）更新频率计数并清空定时器0
+  59   1          if (++cnt_1s >= 500) {
+  60   2              cnt_1s = 0;
+  61   2              cj.freq = (TH0 << 8) | TL0; // 计算频率
+  62   2              TH0 = TL0 = 0;           // 清空定时器0
+  63   2          }
+  64   1          
+  65   1          // 如果uu.ton标志位为真，则执行定时关断逻辑
+  66   1          if (uu.ton) {
+  67   2              if (++uu.t >= 20) {
+  68   3                  uu.cmd = 2; // 设置命令为2
+  69   3              }
+  70   2          }
+  71   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    258    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      7    ----
+   IDATA SIZE       =      4    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
