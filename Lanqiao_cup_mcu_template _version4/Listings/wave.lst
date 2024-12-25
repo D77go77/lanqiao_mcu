@@ -1,0 +1,60 @@
+C51 COMPILER V9.59.0.0   WAVE                                                              12/25/2024 09:59:26 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE WAVE
+OBJECT MODULE PLACED IN .\Objects\wave.obj
+COMPILER INVOKED BY: C:\Software\Keilv5\Keil\Core\C51\BIN\C51.EXE Drivers\wave.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Drive
+                    -rs) DEBUG OBJECTEXTEND PRINT(.\Listings\wave.lst) OBJECT(.\Objects\wave.obj)
+
+line level    source
+
+   1          #include "wave.h"
+   2          
+   3          void de(u8 a); // 延时函数，通过消耗CPU周期实现延时效果
+   4          
+   5          u32 read_d()
+   6          {
+   7   1          u32 d; // 定义变量d用于存储读取的数据
+   8   1          u8 num = 16; // 定义变量num并初始化为16，用于计数
+   9   1      
+  10   1          TX = 0; // 将TX设置为低电平
+  11   1              EA=0;
+  12   1          while (num--) // 执行一个循环，每次循环调用de函数进行延时，并切换TX电平
+  13   1          {
+  14   2              de(14); // 调用延时函数，延时14个周期
+  15   2              TX = !TX; // 切换TX的电平状态
+  16   2          }
+  17   1              EA=1;
+  18   1      
+  19   1          CH = CL = 0; // 初始化CH和CL为0
+  20   1          CR = 1; // 设置CR为1，启动数据读取
+  21   1          while (RX && CH < 0x20); // 等待RX变为0或CH达到0x20
+  22   1          CR = 0; // 设置CR为0，停止数据读取
+  23   1          d = (u32)CH << 8 | CL | 156; // 计算最终的数据值
+  24   1          return d; // 返回读取的数据值
+  25   1      }
+  26          
+  27          void de(u8 a)
+  28          {
+  29   1          while (a--); // 消耗CPU周期以实现延时
+  30   1      }
+  31          
+  32          //***************
+  33          void wave_proc()
+  34          {
+  35   1          cj.d = read_d() * 0.017f; // 读取数据并乘以0.017后赋值给cj.d
+  36   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     98    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----       1
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,71 @@
+C51 COMPILER V9.59.0.0   TIME                                                              12/25/2024 09:59:26 PAGE 1   
+
+
+C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIME
+OBJECT MODULE PLACED IN .\Objects\time.obj
+COMPILER INVOKED BY: C:\Software\Keilv5\Keil\Core\C51\BIN\C51.EXE Drivers\time.c OPTIMIZE(8,SPEED) BROWSE INCDIR(.\Drive
+                    -rs) DEBUG OBJECTEXTEND PRINT(.\Listings\time.lst) OBJECT(.\Objects\time.obj)
+
+line level    source
+
+   1          #include "time.h"
+   2          idata unsigned long int uwTick = 0;   //系统计时变量
+   3          void ne555_proc();
+   4          //**************************
+   5          void Timer0_Init(void)
+   6          {
+   7   1        AUXR &= 0x7F; // 定时器时钟1ms 12T模式
+   8   1        TMOD &= 0xF0; // 设置定时器模式
+   9   1        TMOD |= 0x05; // 设置为模式5（定时器模式）//计数器模式
+  10   1        TL0 = 0;      // 设置初始值
+  11   1        TH0 = 0;      // 设置初始值
+  12   1        TF0 = 0;      // 清除TF0标志
+  13   1        TR0 = 1;      // 启动定时器0
+  14   1      }
+  15          //**************************
+  16          void Timer1_Init(void)          //2毫秒@12.000MHz
+  17          {
+  18   1              AUXR |= 0x40;                   //定时器时钟1T模式
+  19   1              TMOD &= 0x0F;                   //设置定时器模式
+  20   1              TL1 = 0x40;                             //设置定时初始值
+  21   1              TH1 = 0xA2;                             //设置定时初始值
+  22   1              TF1 = 0;                                //清除TF1标志
+  23   1              TR1 = 1;                                //定时器1开始计时
+  24   1              ET1 = 1;
+  25   1      }
+  26          
+  27          // 定时器1中断服务程序，每进入中断一次，uwTick自增1
+  28          void pit1() interrupt 3
+  29          {
+  30   1          uwTick++;//系统总运行时长
+  31   1          disp_scan(); // 调用数码管扫描函数
+  32   1          ne555_proc();  // 调用时间处理函数
+  33   1      }
+  34          
+  35          // ne555处理函数
+  36          void ne555_proc()
+  37          {
+  38   1          static u32 cnt_1s = 0;
+  39   1          // 每500次中断（即每1s）更新频率计数并清空定时器0
+  40   1          if (++cnt_1s >= 500) {
+  41   2              cnt_1s = 0;
+  42   2              cj.freq = (TH0 << 8) | TL0; // 计算频率
+  43   2              TH0 = TL0 = 0;           // 清空定时器0
+  44   2          }
+  45   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    166    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =      2    ----
+   IDATA SIZE       =      4    ----
+C51 COMPILER V9.59.0.0   TIME                                                              12/25/2024 09:59:26 PAGE 2   
+
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

@@ -1,0 +1,15 @@
+".\Objects\main.obj",
+".\Objects\scheduler.obj",
+".\Objects\ctrl.obj",
+".\Objects\iic.obj",
+".\Objects\key.obj",
+".\Objects\led.obj",
+".\Objects\onewire.obj",
+".\Objects\rtc.obj",
+".\Objects\smg.obj",
+".\Objects\time.obj",
+".\Objects\uart.obj",
+".\Objects\wave.obj" 
+TO ".\Objects\Template_program" 
+PRINT(".\Listings\Template_program.m51") RAMSIZE(256) 
+DISABLEWARNING (16) 
