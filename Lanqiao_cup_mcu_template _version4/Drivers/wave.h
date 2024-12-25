@@ -6,7 +6,7 @@
 sbit TX = P1^0;
 sbit RX = P1^1;
 
-u32 read_d();
+u16 read_d();
 
 void wave_proc();
 	

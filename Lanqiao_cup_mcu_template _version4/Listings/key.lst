@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   KEY                                                               12/25/2024 09:59:26 PAGE 1   
+C51 COMPILER V9.59.0.0   KEY                                                               12/25/2024 10:06:54 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE KEY
@@ -62,7 +62,7 @@ line level    source
   52   3                                      else if(_key==8 || _key== 5)// 如果是其他特定的键（例如数字8或5），则进入状态4
   53   3                                      {
   54   4                                              k_state=4;
-C51 COMPILER V9.59.0.0   KEY                                                               12/25/2024 09:59:26 PAGE 2   
+C51 COMPILER V9.59.0.0   KEY                                                               12/25/2024 10:06:54 PAGE 2   
 
   55   4                                              _cnt=0;
   56   4                                      }else
@@ -126,7 +126,7 @@ line level    source
  113   3                      case 20:cj.state=30;break;
  114   3                      case 30:cj.state=40;break;
  115   3                      case 40:cj.state=10;break;
-C51 COMPILER V9.59.0.0   KEY                                                               12/25/2024 09:59:26 PAGE 3   
+C51 COMPILER V9.59.0.0   KEY                                                               12/25/2024 10:06:54 PAGE 3   
 
  116   3                  }
  117   2              break;

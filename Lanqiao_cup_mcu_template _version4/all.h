@@ -11,8 +11,8 @@
 
 // 定义无符号字符类型别名u8
 typedef unsigned char u8;
-// 定义无符号整数类型别名u32
-typedef unsigned int u32;
+// 定义无符号整数类型别名u16
+typedef unsigned int u16;
 
 // 包含其他模块或功能的头文件
 #include "scheduler.h"
@@ -50,7 +50,7 @@ typedef unsigned int u32;
 // 定义一个结构体用于存储测量数据
 xdata struct _cj//注意结构体内存对齐问题，大的数据类型放上面
 {
-	u32 freq; //频率
+	u16 freq; //频率
 	float t; // 温度
     u8 state; // 总状态
     u8 h; // 时

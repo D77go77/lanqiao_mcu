@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   RTC                                                               12/25/2024 09:59:26 PAGE 1   
+C51 COMPILER V9.59.0.0   RTC                                                               12/25/2024 10:06:55 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE RTC
@@ -62,7 +62,7 @@ line level    source
   52   1              return (temp);                  
   53   1      }
   54          
-C51 COMPILER V9.59.0.0   RTC                                                               12/25/2024 09:59:26 PAGE 2   
+C51 COMPILER V9.59.0.0   RTC                                                               12/25/2024 10:06:55 PAGE 2   
 
   55          /**
   56           * 设置实时时钟（RTC）的时间
@@ -127,7 +127,7 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 
-C51 COMPILER V9.59.0.0   RTC                                                               12/25/2024 09:59:26 PAGE 3   
+C51 COMPILER V9.59.0.0   RTC                                                               12/25/2024 10:06:55 PAGE 3   
 
 
 C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

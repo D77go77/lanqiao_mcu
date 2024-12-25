@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   SMG                                                               12/25/2024 09:59:26 PAGE 1   
+C51 COMPILER V9.59.0.0   SMG                                                               12/25/2024 10:06:55 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE SMG
@@ -62,7 +62,7 @@ line level    source
   52   3                  case '8':tmp=smg[8];break;              // 字符 '8' 对应的数码管显示值
   53   3                  case '9':tmp=smg[9];break;              // 字符 '9' 对应的数码管显示值
   54   3                  case 'A':tmp=smg[10];break;             // 字符 'A' 对应的数码管显示值
-C51 COMPILER V9.59.0.0   SMG                                                               12/25/2024 09:59:26 PAGE 2   
+C51 COMPILER V9.59.0.0   SMG                                                               12/25/2024 10:06:55 PAGE 2   
 
   55   3                  case 'b':tmp=smg[11];break;             // 字符 'b' 对应的数码管显示值
   56   3                  case 'C':tmp=smg[12];break;             // 字符 'C' 对应的数码管显示值

@@ -1,4 +1,4 @@
-C51 COMPILER V9.59.0.0   TIME                                                              12/25/2024 09:59:26 PAGE 1   
+C51 COMPILER V9.59.0.0   TIME                                                              12/25/2024 10:06:55 PAGE 1   
 
 
 C51 COMPILER V9.59.0.0, COMPILATION OF MODULE TIME
@@ -45,7 +45,7 @@ line level    source
   35          // ne555处理函数
   36          void ne555_proc()
   37          {
-  38   1          static u32 cnt_1s = 0;
+  38   1          static u16 cnt_1s = 0;
   39   1          // 每500次中断（即每1s）更新频率计数并清空定时器0
   40   1          if (++cnt_1s >= 500) {
   41   2              cnt_1s = 0;
@@ -62,7 +62,7 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    PDATA SIZE       =   ----    ----
    DATA SIZE        =      2    ----
    IDATA SIZE       =      4    ----
-C51 COMPILER V9.59.0.0   TIME                                                              12/25/2024 09:59:26 PAGE 2   
+C51 COMPILER V9.59.0.0   TIME                                                              12/25/2024 10:06:55 PAGE 2   
 
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
