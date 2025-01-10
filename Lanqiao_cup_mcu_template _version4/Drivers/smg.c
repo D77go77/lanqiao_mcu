@@ -17,6 +17,7 @@ code unsigned char smg[] =
 0xa1, //d
 0x86, //E
 0x8e //F
+
 };
 
 u8 dis_buf[8]={0,0,0,0,0,0,0,0};
@@ -37,7 +38,7 @@ void disp_scan()
 void disp_proc()
 {
     u8 i,j,tmp=0;                                 // 初始化索引变量和临时变量
-    for(i=0;i<8;i++,j++)                          // 循环处理每一位数码管
+    for(i=0,j=0;i<8;i++,j++)                          // 循环处理每一位数码管
     {
         switch(dis_str[j])                          // 根据字符设置对应的数码管显示值
         {

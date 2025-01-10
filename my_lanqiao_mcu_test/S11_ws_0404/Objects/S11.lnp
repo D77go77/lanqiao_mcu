@@ -1,9 +1,0 @@
-".\Objects\ctrl.obj",
-".\Objects\iic.obj",
-".\Objects\key.obj",
-".\Objects\main.obj",
-".\Objects\time.obj",
-".\Objects\smg.obj" 
-TO ".\Objects\S11" 
-PRINT(".\Listings\S11.m51") RAMSIZE(256) 
-DISABLEWARNING (16) 

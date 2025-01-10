@@ -324,7 +324,7 @@
               <MiscControls></MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>.\Drivers</IncludePath>
+              <IncludePath>.\Drivers;.\User</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -379,7 +379,7 @@
             <File>
               <FileName>main.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\main.c</FilePath>
+              <FilePath>.\User\main.c</FilePath>
             </File>
             <File>
               <FileName>scheduler.c</FileName>
@@ -389,7 +389,7 @@
             <File>
               <FileName>all.h</FileName>
               <FileType>5</FileType>
-              <FilePath>.\all.h</FilePath>
+              <FilePath>.\User\all.h</FilePath>
             </File>
           </Files>
         </Group>
