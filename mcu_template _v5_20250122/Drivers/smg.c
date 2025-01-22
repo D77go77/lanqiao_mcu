@@ -20,12 +20,12 @@ code unsigned char smg[] =
 
 };
 
-u8 dis_buf[8]={0,0,0,0,0,0,0,0};
-u8 dis_str[11];
+idata u8 dis_buf[8]={0,0,0,0,0,0,0,0};
+idata u8 dis_str[11];
 //**************************************************************//
 void disp_scan()
 {
-    static u8 i=0;                                // 使用静态变量 i 记忆当前扫描位置
+    static idata u8 i=0;                                // 使用静态变量 i 记忆当前扫描位置
     P0=0;                                         // 关闭所有数码管
     gate(WEI);                                    // 设置位选信号
     P0=dis_buf[i];                                // 显示当前位数码管的数据
@@ -37,7 +37,7 @@ void disp_scan()
 //**************************************************************//
 void disp_proc()
 {
-    u8 i,j,tmp=0;                                 // 初始化索引变量和临时变量
+    idata u8 i,j,tmp=0;                                 // 初始化索引变量和临时变量
     for(i=0,j=0;i<8;i++,j++)                          // 循环处理每一位数码管
     {
         switch(dis_str[j])                          // 根据字符设置对应的数码管显示值
@@ -70,22 +70,22 @@ void disp_proc()
     }
 }
 //**************************************************************//
-u8 f_wei=0;//smg闪烁标志
+idata bit f_wei=0;//smg闪烁标志
 void smg_proc()
 {
     switch(cj.state)                                // 根据状态选择不同的显示格式
     {
         case 10:
-            if(f_wei)
+            if(f_wei)//数码管闪烁
                 sprintf(dis_str,"F%02bu-%02bubb",cj.m,cj.s); // 格式化字符串，显示频率和时间
             else
                 sprintf(dis_str,"   -%02bubb",cj.s);         // 格式化字符串，显示时间
             break;
         case 20:
-            if(f_wei)
+//            if(f_wei)
                 sprintf(dis_str,"d    %3bu",cj.key);          // 格式化字符串，显示按键值
-            else
-                sprintf(dis_str,"E  %5u",cj.freq);           // 格式化字符串，显示频率
+//            else
+//                sprintf(dis_str,"E  %5u",cj.freq);           // 格式化字符串，显示频率
             break;
         case 30:sprintf(dis_str,"b%3.1f %3bu",cj.t,cj.d);break; // 格式化字符串，显示温度和距离
         case 40:sprintf(dis_str,"A    %3bu",cj.ad);break;     // 格式化字符串，显示AD值

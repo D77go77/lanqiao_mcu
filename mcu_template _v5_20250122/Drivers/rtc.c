@@ -83,8 +83,7 @@ void rtc_run(u8 h, u8 m, u8 s)
  */
 void rtc_proc()
 {
-    u8 h, m, s;
-    
+    idata u8 h, m, s;
     // 禁用中断
     EA = 0;
     // 读取小时

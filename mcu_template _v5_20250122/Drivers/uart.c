@@ -1,5 +1,5 @@
 #include "uart.h"
-xdata struct _uu uu;
+idata struct _uu uu;
 void Uart1_Isr(void) interrupt 4
 {
 	if (TI)				//检测串口1发送中断
@@ -23,12 +23,13 @@ void Uart1_Init(void)	//4800bps@12.000MHz
 	T2L = 0x8F;			//设置定时初始值
 	T2H = 0xFD;			//设置定时初始值
 	AUXR |= 0x10;		//定时器2开始计时
-//	P_SW1 = (P_SW1 &~WEI)|LED;//P_SW1 = (P_SW1 & ~0xc0) | 0x80;		//UART1/USART1: RxD(P1.6), TxD(P1.7)
+//	P_SW1 = (P_SW1 &~WEI)|LED;//P_SW1 = (P_SW1 & ~0xc0) | 0x80;	//UART1方便仿真，切换串口引脚: RxD(P1.6), TxD(P1.7)
 	ES = 1;				//使能串口1中断
 }
 
 void uu_init()
 {
+	memset(uu.buf, 0, uu. i); // 清空接收数据
 	uu. f=0;
 	uu. i=0;
 	uu. t=0;

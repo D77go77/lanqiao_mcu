@@ -65,7 +65,7 @@ bit init_ds18b20(void)
   	return initflag;
 }
 
-
+//*************************以下为DS18b20**********************************//
 void init_temp()
 {
     init_ds18b20(); // 初始化DS18B20温度传感器
@@ -75,8 +75,8 @@ void init_temp()
 
 float read_temp()
 {
-    u8 H,L; // 声明变量H和L用于存储温度数据的高低字节
-    float tmp; // 声明变量tmp用于存储计算得到的温度值
+    xdata u8 H,L; // 声明变量H和L用于存储温度数据的高低字节
+    xdata float tmp; // 声明变量tmp用于存储计算得到的温度值
     init_ds18b20(); // 初始化DS18B20温度传感器
     Write_DS18B20(0xcc); // 发送跳过ROM命令，不读取特定传感器的序列号
     Write_DS18B20(0xbe); // 发送读取温度命令，开始读取温度数据

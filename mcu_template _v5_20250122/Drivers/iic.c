@@ -106,7 +106,11 @@ void I2CSendAck(unsigned char ackbit)
 	sda = 1;
 	I2C_Delay(DELAY_TIME);
 }
-
+//**************************************
+/**
+ * adc初始化
+ * @param a 地址参数 0x40 0x03 0x01 或者加起来 具体看PCF8591芯片
+ */
 void init_ad(u8 add)
 {
 	I2CStart();
@@ -115,33 +119,41 @@ void init_ad(u8 add)
 	I2CSendByte(add);
 	I2CWaitAck();
 	I2CStop();
-
 }
-
+/**
+ * adc读取
+ * @note 取决于ad_init的变量
+ */
 u8 read_ad()
 {
-	u8 tmp;
+	idata u8 tmp;
 	I2CStart();
 	I2CSendByte(0x91);
 	I2CWaitAck();
-	tmp=I2CReceiveByte();
+	tmp = I2CReceiveByte();
 	I2CSendAck(1);
 	I2CStop();
 	return tmp;
 }
-
+/**
+ * adc读取
+ * @param dac电压输出值 0~255对应 0~5v
+ */
 void w_dac(u8 val)
 {
 	I2CStart();
 	I2CSendByte(0x90);
 	I2CWaitAck();
-	I2CSendByte(0x43);//单DAC 0x40  光敏+0x01  adc+0x03 
+	I2CSendByte(0x43);//单DAC 0x40  光敏+0x01  adc+0x03 如果光敏 电位器 dac都要的话，需要分别读取(思路:先读取0x41，再读取0x43)
 	I2CWaitAck();
 	I2CSendByte(val);
 	I2CWaitAck();
 	I2CStop();
 }
-
+/**
+ * e2prom单读取
+ * @param  地址位 数据位(写入要8个8个的写)
+ */
 void w_e2p(u8 add,u8 val)
 {
 	I2CStart();
@@ -153,10 +165,13 @@ void w_e2p(u8 add,u8 val)
 	I2CWaitAck();
 	I2CStop();
 }
-
+/**
+ * e2prom单写入
+ * @param  地址位 (读取要8个8个的读)
+ */
 u8 r_e2p(u8 add)
 {
-	u8 tmp;
+	idata u8 tmp;
 	I2CStart();
 	I2CSendByte(0xa0);
 	I2CWaitAck();
@@ -167,13 +182,11 @@ u8 r_e2p(u8 add)
 	I2CStart();
 	I2CSendByte(0xa1);
 	I2CWaitAck();
-	tmp=I2CReceiveByte();
+	tmp = I2CReceiveByte();
 	I2CSendAck(1);
 	I2CStop();
 	return tmp;
 }
-
-
 
 //***************
 void adc_proc()

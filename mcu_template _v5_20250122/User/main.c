@@ -1,5 +1,11 @@
 #include "all.h"
-xdata struct _cj cj;
+// 变量尽量使用idata,加快程序运行速度,优化内存
+// 魔术棒里面的MemoryModel:必须使用small 来加快程序效率
+// 注意图下 Program Siz :
+//	data_ 不能大于230  防止data区堆栈空间不足 约232以上程序就会堆栈溢出
+// 	如果大于就只能将部分不是高频率的变量使用xdata ，
+//	code自然越低越好
+idata struct _cj cj;
 
 // 系统初始化函数
 void init()
@@ -18,12 +24,12 @@ void init()
     cj.key=0;cj.freq = 0;
     // 初始化调度器
     Scheduler_Init();
-    // 初始化串口和用户接口
-    Uart1_Init();
-    uu_init();
+//    // 初始化串口和用户接口
+//    Uart1_Init();
+//    uu_init();
     // 初始化定时器0和定时器1
     Timer0_Init();
-    Timer1_Init();//习惯初始化中断定时器放最后//
+    Timer1_Init();//习惯初始化中断定时器放最后//uwTick定时器
 }
 
 // 主函数

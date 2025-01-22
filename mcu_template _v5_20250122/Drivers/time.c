@@ -32,10 +32,10 @@ void pit1() interrupt 3
     ne555_proc();  // 调用时间处理函数
 }
 
-// ne555处理函数
+// ne555处理函数 //为了准确,读取函数放中断
 void ne555_proc()
 {
-    static u16 cnt_1s = 0;
+    static idata u16 cnt_1s = 0;
     // 每500次中断（即每1s）更新频率计数并清空定时器0
     if (++cnt_1s >= 500) {
         cnt_1s = 0;

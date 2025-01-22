@@ -4,6 +4,15 @@
 
 - **智能控制社团written by ws**
 
+  ## 更新日志
+
+  - 内存管理问题
+
+  - 按键底层更新
+  - 串口底层添加buf缓存清除
+
+  
+
 ## 关于宏定义介绍 
 
 使用宏定义，方便我们快速打字
@@ -228,7 +237,7 @@ void off(u8 a)
 
 ### 代码详解
 
-#### 1. 独立按键扫描函数
+#### 独立按键扫描函数
 
 ```c
 u8 getkeybtn()
@@ -242,7 +251,7 @@ u8 getkeybtn()
 }
 ```
 
-#### 2. 矩阵按键扫描函数****
+#### 矩阵按键扫描函数****
 
 `getkey22` 函数用于实现按键的行列扫描。通过设置列的电平，然后检查行的电平来判断按键是否被按下。
 
@@ -272,80 +281,94 @@ u8 getkey22()
 
 ------
 
-#### 2. 状态机扫描函数
+#### 按键消抖函数
 
-`key_scan` 函数使用状态机管理按键的按下、释放、长按等状态。
+通过边沿检测，检测按键的上下沿，减少采样率来达到消抖的目的，其中getkey22再非按下的情况返回0，也就是说该按键Key_Val 是高电平按键。需要注意的是 下面的Key_Down，即下降沿键码。
+
+```
+xdata u8 Key_Val, Key_Down, Key_Up, Key_Old;
+//按键扫描函数，该函数10ms扫描一次，并通过边沿检测消抖
+void key_scan()
+{
+	static xdata u8 key_tick = 0;// 长按计时器
+	static idata u8 key_state = 0; // 状态机状态
+	Key_Val = getkey22();
+	Key_Down =  Key_Val & (Key_Old ^ Key_Val); // 按键按下检测 高电平按键
+	Key_Up 	 = 	~Key_Val & (Key_Old ^ Key_Val);// 按键抬起检测 高电平按键
+	Key_Old  = 	Key_Val;
+}
+```
+
+
+
+#### 状态机扫描函数
+
+`key_scan` 函数使用状态机管理按键的按下、长按、连击、释放等状态。
 
 ```c
 void key_scan()
 {
-    static u8 k_state = 0;
-    static u8 _key = 0;
-    static u8 _cnt = 0;
-    u8 k_tmp;
-
-    k_tmp = getkey22();  // 获取按键扫描结果
-    switch (k_state)
-    {
-        case 0:
-            if (k_tmp) k_state = 1; // 检测到按键按下，进入状态1
-            break;
-
-        case 1:
-            if (k_tmp)  // 持续检测按键
-            {
-                _key = k_tmp;
-                if (_key == 17) { k_state = 3; _cnt = 0; } // 长按键17
-                else if (_key == 8 || _key == 5) { k_state = 4; _cnt = 0; } // 长按键8或5
-                else k_state = 2;  // 其他按键短按
-            }
-            else k_state = 0;  // 按键释放，回到初始状态
-            break;
-
-        case 2:
-            if (!k_tmp) { key_code = _key; k_state = 0; }  // 按键释放，记录键值
-            break;
-
-        case 3:
-            if (k_tmp)  // 长按检测
-            {
-                if (++_cnt >= 50) { key_code = 17; k_state = 30; }
-            }
-            else k_state = 0;  // 按键释放
-            break;
-
-        case 4:
-            if (k_tmp)  // 长按其他键
-            {
-                if (++_cnt >= 50)
-                {
-                    _cnt -= 5;  // 防止触发过快
-                    key_code = _key;
-                }
-            }
-            else { key_code = _key; k_state = 0; }
-            break;
-
-        case 30:
-            if (!k_tmp) k_state = 0;  // 长按释放
-            break;
-    }
+	static xdata u8 key_tick = 0;// 长按计时器
+	static idata u8 key_state = 0; // 状态机状态
+	Key_Val = getkey22();
+	Key_Down =  Key_Val & (Key_Old ^ Key_Val); // 按键按下检测 高电平按键
+	Key_Up 	 = 	~Key_Val & (Key_Old ^ Key_Val);// 按键抬起检测 高电平按键
+	Key_Old  = 	Key_Val;
+ 
+	switch(key_state)
+	{
+		case 0:// 短按，按下触发
+			if(Key_Val == Key_Old && Key_Down)// 如果当前按键和上次一样 并且 已经有按下的键码
+			{
+				key_tick = 0;
+				key_code = Key_Down;
+				// 可在此检测Down键码 添加特殊状态，比如连击
+				if(Key_Down == 5 || Key_Down == 8)
+					key_state = 2;// 连击
+				else if(Key_Down == 9)
+					key_state = 1;// 长按
+			}
+			break;
+		case 1:// 长按，按下触发 并等待释放
+			if(Key_Val)
+			{
+				if(++key_tick >= 100)
+				{
+					key_state = 3;
+					key_code = Key_Val + 10;
+					
+				}
+			}else key_state = 0;
+			break;
+		case 2:// 连按，按下触发
+			if(Key_Val)
+			{
+				if(++key_tick >= 100)
+				{
+					key_tick -= 10;//重置累加器
+					key_code = Key_Val;
+				}
+			}else key_state = 0;
+			break;
+		case 3:// 等待释放
+			if(!Key_Val) key_state=0;
+			break;
+	}
 }
 ```
 
 **状态说明**：
 
-1. **状态0**：等待按键按下。
-2. **状态1**：确认按键按下，进一步检测按键类型。
-3. **状态2**：短按检测，记录按键值。
-4. **状态3/4**：长按检测，执行特定操作。
-5. **状态30**：长按释放，回到初始状态。
+1. **状态0**：确认按键按下，进一步检测按键类型。
+2. **状态1**：长按检测，执行特定操作。
+3. **状态2**：连按检测，执行特定操作。
+4. **状态3**：长按释放，回到初始状态。
 
 ------
 
 ### 注意事项
 
-1. **P30/P31 冲突**：由于P30/P31用于串口通信，按键扫描时需关闭串口轮询。
+1. **P30/P31 冲突**：由于P30/P31用于串口通信，当使用串口，且按键需要P30/P31行按键扫描时需关闭串口轮询。
 
    ```c
    ET1 = 0;  // 关闭定时器1轮询
@@ -979,13 +1002,14 @@ void Uart1_Isr(void) interrupt 4
 
 ### UART 状态初始化函数：
 
-`uu_init` 用于初始化 UART 相关状态变量和缓冲区。
+`uu_init` 用于初始化 UART 相关状态变量和缓冲区。添加缓存区初始化代码。
 
 **代码：**
 
 ```c
 void uu_init()
 {
+    memset(uu.buf, 0, uu. i); // 清空接收数据
     uu.f = 0;   // 清除接收标志
     uu.i = 0;   // 清除缓冲区索引
     uu.t = 0;   // 清除时间标志
@@ -1027,6 +1051,47 @@ void init()
 ```
 
 ## main主函数书写
+
+### 内存优化
+
+为什么要内存优化，为了区分程序之间的差距，代码运行效率也是需要做到的。
+
+首先在Targe魔术棒中，绝对不能使用xdata，最基本的 data是效率最高的，
+
+![image-20250122201837096](https://z1r343l-001.obs.cn-north-4.myhuaweicloud.com/img/202501222018175.png)
+
+其次，声明普通变量最好都统一使用 ：**idata**  。
+
+在小于128字节的范围内，idata就是data，也就是最高效率，在128~256字节内就会变成较高效率的idata。
+
+```
+例如：
+idata struct _cj cj;
+static idata u8 key_state = 0; // 状态机状态
+idata u8 i,j,tmp=0; 
+```
+
+在bool类型，也就是变量只有0与1 的变化，统一使用 bit 作为关键字。
+
+```
+例如：
+idata bit f_wei=0;//smg闪烁标志
+```
+
+**注意：**
+
+1. 时刻关注程序编译之后 的大小。Program Size
+
+   ![](https://z1r343l-001.obs.cn-north-4.myhuaweicloud.com/img/202501222024970.png)
+
+2. Program Size 中的data 不能大于 230 !如果大于230，那么data区的空间将严重不足，会导致堆栈溢出，程序跑飞的情况，所以在data大概210的时候，可以采取将部分不需要频繁读取的变量 存放在xdata中。
+
+   ```
+   例如:
+   static xdata u8 key_tick = 0;// 长按计时器
+   ```
+
+   
 
 ### main.c
 

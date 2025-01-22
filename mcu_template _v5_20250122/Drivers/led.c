@@ -10,7 +10,6 @@ sbit L6 = led_dat^5;
 sbit L7 = led_dat^6;
 sbit L8 = led_dat^7;
 
-u8 f_on=0;//led闪烁标志
 /**
  * led_scan函数用于扫描LED状态并进行硬件控制。
  * 该函数将led_dat变量取反后赋值给端口P0，以驱动LED显示，
@@ -22,13 +21,14 @@ void led_scan()
     gate(LED);
 }
 
+idata bit f_on=0;//led闪烁标志
 /**
  * led_proc函数用于处理LED的显示逻辑。
  * 该函数首先清零led_dat变量，然后根据cj.state的状态设置LED的显示模式。
  */
 void led_proc()
 {
-    led_dat=0;
+    led_dat=0;//led刷新重置
     switch(cj.state)
     {
         case 10:
